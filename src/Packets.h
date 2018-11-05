@@ -48,6 +48,8 @@ public:
 
 	}
 };
+// TODO: PacketRegisterMCC
+
 class PacketRegisterMCC {
 public:
 	PacketType packetType; // Which type is this packet
@@ -73,10 +75,33 @@ public:
 
 	}
 };
-// TODO: PacketRegisterMCC
 
 // TODO: PacketRegisterMCCAck   <-- Do we need an actual data packet? Think...
 
 // TODO: PacketUnregisterMCC
+class PacketUnregisterMCC {
+public:
+	PacketType packetType; // Which type is this packet
+	uint16_t srcAgentId;   // Which agent sent this packet?
+	uint16_t dstAgentId;   // Which agent is expected to receive the packet?
+	PacketUnregisterMCC() :
+		packetType(PacketType::Last),
+		srcAgentId(NULL_AGENT_ID),
+		dstAgentId(NULL_AGENT_ID)
+	{ }
+	void Read(InputMemoryStream &stream) {
+		stream.Read(packetType);
+		stream.Read(srcAgentId);
+		stream.Read(dstAgentId);
 
+		// TODO: Deserialize fields
+	}
+	void Write(OutputMemoryStream &stream) {
+		// TODO: Serialize fields
+		stream.Write(packetType);
+		stream.Write(srcAgentId);
+		stream.Write(dstAgentId);
+
+	}
+};
 // TODO: PacketUnregisterMCCAck <-- Do we need an actual data packet? Think...
