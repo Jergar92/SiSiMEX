@@ -164,8 +164,13 @@ void ModuleYellowPages::OnPacketReceived(TCPSocketPtr socket, InputMemoryStream 
 
 		// TODO: Serialize and send PacketRegisterMCCAck (make it in Packets.h first)
 		// 1 - Create an OutputMemoryStream
+		OutputMemoryStream stream;
 		// 2 - Create a PacketHeader and fill it
+		PacketHeader packet_header;
+		packet_header.packetType = PacketType::RegisterMCCAck;
+		packet_header.srcAgentId = inPacketHead.srcAgentId;
 		// 3 - Send the packet through the socket
+
 	}
 	else if (inPacketHead.packetType == PacketType::UnregisterMCC)
 	{
@@ -191,8 +196,13 @@ void ModuleYellowPages::OnPacketReceived(TCPSocketPtr socket, InputMemoryStream 
 		//iLog << " - Contributed Item ID: " << inPacketData.itemId;
 
 		// TODO: Serialize and send PacketRegisterMCCAck (make the packet in Packets.h first)
+
 		// 1 - Create an OutputMemoryStream
+		OutputMemoryStream stream;
 		// 2 - Create a PacketHeader and fill it
+		PacketHeader packet_header;
+		packet_header.packetType = PacketType::UnregisterMCCAck;
+		packet_header.srcAgentId = inPacketHead.srcAgentId;
 		// 3 - Send the packet through the socket
 	}
 }
