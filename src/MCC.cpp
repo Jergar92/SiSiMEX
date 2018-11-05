@@ -91,8 +91,11 @@ bool MCC::registerIntoYellowPages()
 {
 	// TODO: Create a PacketHeader (make it in Packets.h)
 	PacketHeader packet_header;
+	packet_header.packetType = PacketType::RegisterMCC;
+	packet_header.srcAgentId = id();
 	// TODO: Create a PacketRegisterMCC (make it in Packets.h)
 	PacketRegisterMCC packet_register_mcc;
+	packet_register_mcc.itemId = contributedItemId();
 	// TODO: Serialize both packets into an OutputMemoryStream
 	OutputMemoryStream stream;
 	packet_header.Write(stream);
@@ -107,9 +110,11 @@ bool MCC::unregisterFromYellowPages()
 {
 	// TODO: Create a PacketHeader (make it in Packets.h)
 	PacketHeader packet_header;
-
+	packet_header.packetType = PacketType::UnregisterMCC;
+	packet_header.srcAgentId = id();
 	// TODO: Create a PacketUnregisterMCC (make it in Packets.h)
 	PacketUnregisterMCC packet_unregister_mcc;
+	packet_unregister_mcc.itemId = contributedItemId();
 
 	// TODO: Serialize both packets into an OutputMemoryStream
 	OutputMemoryStream stream;
