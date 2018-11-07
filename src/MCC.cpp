@@ -34,18 +34,25 @@ void MCC::update()
 {
 	switch (state())
 	{
+	case ST_INIT:
+		break;
 	case ST_REGISTERING:
 		registerIntoYellowPages();
 		break;
 	case ST_UNREGISTERING:
 		unregisterFromYellowPages();
 		break;
-
+	case ST_FINISHED:
+		destroy();
+		break;
 		// TODO:
 		// - Register or unregister into/from YellowPages depending on the state
 		//       Use the functions registerIntoYellowPages and unregisterFromYellowPages
 		//       so that this switch statement remains clean and readable
 		// - Set the next state when needed ...
+	default:
+		setState(ST_INIT);
+		break;
 	}
 }
 
@@ -112,6 +119,7 @@ bool MCC::unregisterFromYellowPages()
 	PacketHeader packet_header;
 	packet_header.packetType = PacketType::UnregisterMCC;
 	packet_header.srcAgentId = id();
+	
 	// TODO: Create a PacketUnregisterMCC (make it in Packets.h)
 	PacketUnregisterMCC packet_unregister_mcc;
 	packet_unregister_mcc.itemId = contributedItemId();

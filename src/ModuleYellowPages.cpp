@@ -139,20 +139,20 @@ void ModuleYellowPages::OnPacketReceived(TCPSocketPtr socket, InputMemoryStream 
 
 	// TODO: Deserialize PacketHeader (Make it in Packets.h first)
 	PacketHeader inPacketHead;
-
+	inPacketHead.Read(stream);
 	if (inPacketHead.packetType == PacketType::RegisterMCC)
 	{
 		iLog << "PacketType::RegisterMCC";
 
 		// TODO: Deserialize PacketRegisterMCC (make it in Packets.h first)
-		uint16_t itemId = NULL_ITEM_ID;
-
+		PacketRegisterMCC packet_register_mcc;
+		packet_register_mcc.Read(stream);
 		// Register the MCC into the yellow pages
 		AgentLocation mcc;
 		mcc.hostIP = socket->RemoteAddress().GetIPString();
 		mcc.hostPort = LISTEN_PORT_AGENTS;
 		mcc.agentId = inPacketHead.srcAgentId;
-		_mccByItem[itemId].push_back(mcc);
+		_mccByItem[packet_register_mcc.itemId].push_back(mcc);
 
 		// Host address
 		std::string hostAddress = socket->RemoteAddress().GetString();
@@ -169,7 +169,9 @@ void ModuleYellowPages::OnPacketReceived(TCPSocketPtr socket, InputMemoryStream 
 		PacketHeader packet_header;
 		packet_header.packetType = PacketType::RegisterMCCAck;
 		packet_header.srcAgentId = inPacketHead.srcAgentId;
+		packet_header.Write(stream);
 		// 3 - Send the packet through the socket
+		socket->SendPacket(stream.GetBufferPtr(), stream.GetSize());
 
 	}
 	else if (inPacketHead.packetType == PacketType::UnregisterMCC)
@@ -178,9 +180,10 @@ void ModuleYellowPages::OnPacketReceived(TCPSocketPtr socket, InputMemoryStream 
 
 		// TODO: Deserialize PacketUnregisterMCC (make it in Packets.h first)
 		uint16_t itemId = NULL_ITEM_ID;
-
+		PacketUnregisterMCC packet_unregister_mcc;
+		packet_unregister_mcc.Read(stream);
 		// Unregister the MCC from the yellow pages
-		std::list<AgentLocation> &mccs(_mccByItem[itemId]);
+		std::list<AgentLocation> &mccs(_mccByItem[packet_unregister_mcc.itemId]);
 		for (auto it = mccs.begin(); it != mccs.end();) {
 			if (it->agentId == inPacketHead.srcAgentId) {
 				auto oldIt = it++;
@@ -203,7 +206,10 @@ void ModuleYellowPages::OnPacketReceived(TCPSocketPtr socket, InputMemoryStream 
 		PacketHeader packet_header;
 		packet_header.packetType = PacketType::UnregisterMCCAck;
 		packet_header.srcAgentId = inPacketHead.srcAgentId;
+		packet_header.Write(stream);
 		// 3 - Send the packet through the socket
+		socket->SendPacket(stream.GetBufferPtr(), stream.GetSize());
+
 	}
 }
 

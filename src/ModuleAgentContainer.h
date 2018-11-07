@@ -24,7 +24,6 @@ public:
 	// Getters
 	AgentPtr getAgent(int agentId);
 	bool empty() const;
-
 	// Update
 	bool update() override;
 
