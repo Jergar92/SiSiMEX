@@ -35,12 +35,16 @@ void MCC::update()
 	switch (state())
 	{
 	case ST_INIT:
+		if (registerIntoYellowPages())
+			setState(ST_REGISTERING);
+		else
+			stop();
 		break;
 	case ST_REGISTERING:
-		registerIntoYellowPages();
+		
 		break;
 	case ST_UNREGISTERING:
-		unregisterFromYellowPages();
+	//	unregisterFromYellowPages();
 		break;
 	case ST_FINISHED:
 		destroy();
@@ -50,8 +54,6 @@ void MCC::update()
 		//       Use the functions registerIntoYellowPages and unregisterFromYellowPages
 		//       so that this switch statement remains clean and readable
 		// - Set the next state when needed ...
-	default:
-		setState(ST_INIT);
 		break;
 	}
 }
@@ -107,7 +109,8 @@ bool MCC::registerIntoYellowPages()
 	OutputMemoryStream stream;
 	packet_header.Write(stream);
 	packet_register_mcc.Write(stream);
-	sendPacketToYellowPages(stream);
+	if (sendPacketToYellowPages(stream))
+		return true;
 	// TODO: Send the stream (Agent::sendPacketToYellowPages)
 
 	return false;
@@ -128,7 +131,9 @@ bool MCC::unregisterFromYellowPages()
 	OutputMemoryStream stream;
 	packet_header.Write(stream);
 	packet_unregister_mcc.Write(stream);
-	sendPacketToYellowPages(stream);
+
+	if (sendPacketToYellowPages(stream))
+		return true;
 	// TODO: Send the stream (Agent::sendPacketToYellowPages)
 
 	return false;
