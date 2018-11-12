@@ -98,6 +98,34 @@ public:
  */
 class PacketReturnMCCsForItem {
 public:
+	std::list<AgentLocation> adresses;
 	
+	void Read(InputMemoryStream &stream) 
+	{
+		int size = 0;
+		stream.Read(size);
+
+		for(int i = 0; i < size;i++)
+		{
+			AgentLocation item;
+			item.Read(stream);
+			adresses.push_back(item);
+		}
+			
+	}
+	void Write(OutputMemoryStream &stream) 
+	{
+		stream.Write(adresses.size());
+	    
+	/*	for (std::list<AgentLocation>::iterator item; item <  ;item++) 
+		{
+			
+			
+		
+		}*/
+	}
+
+
+
 };
 // TODO
