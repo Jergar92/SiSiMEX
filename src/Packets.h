@@ -79,7 +79,16 @@ using PacketUnregisterMCC = PacketRegisterMCC;
  * The information is the same required for PacketRegisterMCC so...
  */
 // TODO
-
+class PacketQueryMCCsForItem {
+public:
+	uint16_t itemId; // Which item has to be registered?
+	void Read(InputMemoryStream &stream) {
+		stream.Read(itemId);
+	}
+	void Write(OutputMemoryStream &stream) {
+		stream.Write(itemId);
+	}
+};
 /**
  * class PacketReturnMCCsForItem
  * This packet is the response for PacketQueryMCCsForItem and
@@ -87,4 +96,8 @@ using PacketUnregisterMCC = PacketRegisterMCC;
  * It contains a list of the addresses of MCC agents contributing
  * with the item specified by the PacketQueryMCCsForItem.
  */
+class PacketReturnMCCsForItem {
+public:
+	
+};
 // TODO
