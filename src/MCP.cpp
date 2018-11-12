@@ -49,6 +49,12 @@ void MCP::OnPacketReceived(TCPSocketPtr socket, const PacketHeader &packetHeader
 	if (state() == ST_REQUESTING_MCCs && packetType == PacketType::ReturnMCCsForItem)
 	{
 		iLog << "OnPacketReceived PacketType::ReturnMCCsForItem " << _requestedItemId;
+		PacketQueryMCCsForItem packet;
+
+		packet.Read(stream);
+		iLog << "MCC agent locations " << packet.itemId;
+		socket->Disconnect();
+		setState(ST_ITERATING_OVER_MCCs);
 
 		// TODO:
 		// 1) Deserialize the packet

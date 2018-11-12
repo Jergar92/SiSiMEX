@@ -203,7 +203,10 @@ void ModuleYellowPages::OnPacketReceived(TCPSocketPtr socket, InputMemoryStream 
 		outPacket.Write(outStream);
 		socket->SendPacket(outStream.GetBufferPtr(), outStream.GetSize());
 	}
+	else if (inPacketHead.packetType == PacketType::QueryMCCsForItem)
+	{
 
+	}
 	// TODO: Handle packet type PacketType::QueryMCCsForItem
 }
 
