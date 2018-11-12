@@ -2,12 +2,13 @@
 #include "Application.h"
 #include "ModuleAgentContainer.h"
 
-// With these states you have enough so far...
 enum State
 {
 	ST_INIT,
 	ST_REGISTERING,
 	ST_IDLE,
+	ST_NEGOTIATING,
+	ST_NEGOTIATION_FINISHED,
 	ST_UNREGISTERING,
 	ST_FINISHED
 };
@@ -17,6 +18,7 @@ MCC::MCC(Node *node, uint16_t contributedItemId, uint16_t constraintItemId) :
 	_contributedItemId(contributedItemId),
 	_constraintItemId(constraintItemId)
 {
+	setState(ST_INIT);
 }
 
 
@@ -24,37 +26,25 @@ MCC::~MCC()
 {
 }
 
-void MCC::start()
-{
-	setState(ST_INIT);
-	// TODO: Set the initial state
-}
-
 void MCC::update()
 {
 	switch (state())
 	{
 	case ST_INIT:
-		if (registerIntoYellowPages())
+		if (registerIntoYellowPages()) {
 			setState(ST_REGISTERING);
-		else
-			stop();
+		} else {
+			setState(ST_FINISHED);
+		}
 		break;
 	case ST_REGISTERING:
-		
+		// See OnPacketReceived()
 		break;
 	case ST_UNREGISTERING:
-	//	unregisterFromYellowPages();
+		// See OnPacketReceived()
 		break;
 	case ST_FINISHED:
 		destroy();
-		break;
-		// TODO:
-		// - Register or unregister into/from YellowPages depending on the state
-		//       Use the functions registerIntoYellowPages and unregisterFromYellowPages
-		//       so that this switch statement remains clean and readable
-		// - Set the next state when needed ...
-		break;
 	}
 }
 
@@ -67,74 +57,59 @@ void MCC::stop()
 
 void MCC::OnPacketReceived(TCPSocketPtr socket, const PacketHeader &packetHeader, InputMemoryStream &stream)
 {
-	// Taking the state into account, receive and deserialize packets (Ack packets) and set next state
-	if (state() == ST_REGISTERING && packetHeader.packetType == PacketType::RegisterMCCAck)
-	{
-		// TODO: Set the next state (Idle in this case)
+	const PacketType packetType = packetHeader.packetType;
+	if (state() == ST_REGISTERING && packetType == PacketType::RegisterMCCAck) {
 		setState(ST_IDLE);
-		// TODO: Disconnect the socket (we don't need it anymore)
-		socket->Disconnect();	
-	}
-	// TODO: Do the same for unregistering
-	if (state() == ST_UNREGISTERING && packetHeader.packetType == PacketType::UnregisterMCCAck)
-	{
-		// TODO: Set the next state (Idle in this case)
-		setState(ST_IDLE);
-		// TODO: Disconnect the socket (we don't need it anymore)
 		socket->Disconnect();
-
+	}
+	else if (state() == ST_UNREGISTERING && packetType == PacketType::UnregisterMCCAck) {
+		setState(ST_FINISHED);
+		socket->Disconnect();
 	}
 }
 
 bool MCC::negotiationFinished() const
 {
-	return false;
+	return state() == ST_NEGOTIATION_FINISHED;
 }
 
 bool MCC::negotiationAgreement() const
 {
-	return false;
+	return state() == ST_NEGOTIATION_FINISHED;
 }
 
 bool MCC::registerIntoYellowPages()
 {
-	// TODO: Create a PacketHeader (make it in Packets.h)
-	PacketHeader packet_header;
-	packet_header.packetType = PacketType::RegisterMCC;
-	packet_header.srcAgentId = id();
-	// TODO: Create a PacketRegisterMCC (make it in Packets.h)
-	PacketRegisterMCC packet_register_mcc;
-	packet_register_mcc.itemId = contributedItemId();
-	// TODO: Serialize both packets into an OutputMemoryStream
-	OutputMemoryStream stream;
-	packet_header.Write(stream);
-	packet_register_mcc.Write(stream);
-	if (sendPacketToYellowPages(stream))
-		return true;
-	// TODO: Send the stream (Agent::sendPacketToYellowPages)
+	// Create message header and data
+	PacketHeader packetHead;
+	packetHead.packetType = PacketType::RegisterMCC;
+	packetHead.srcAgentId = id();
+	packetHead.dstAgentId = -1;
+	PacketRegisterMCC packetData;
+	packetData.itemId = _contributedItemId;
 
-	return false;
+	// Serialize message
+	OutputMemoryStream stream;
+	packetHead.Write(stream);
+	packetData.Write(stream);
+
+	return sendPacketToYellowPages(stream);
 }
 
-bool MCC::unregisterFromYellowPages()
+void MCC::unregisterFromYellowPages()
 {
-	// TODO: Create a PacketHeader (make it in Packets.h)
-	PacketHeader packet_header;
-	packet_header.packetType = PacketType::UnregisterMCC;
-	packet_header.srcAgentId = id();
-	
-	// TODO: Create a PacketUnregisterMCC (make it in Packets.h)
-	PacketUnregisterMCC packet_unregister_mcc;
-	packet_unregister_mcc.itemId = contributedItemId();
+	// Create message
+	PacketHeader packetHead;
+	packetHead.packetType = PacketType::UnregisterMCC;
+	packetHead.srcAgentId = id();
+	packetHead.dstAgentId = -1;
+	PacketUnregisterMCC packetData;
+	packetData.itemId = _contributedItemId;
 
-	// TODO: Serialize both packets into an OutputMemoryStream
+	// Serialize message
 	OutputMemoryStream stream;
-	packet_header.Write(stream);
-	packet_unregister_mcc.Write(stream);
+	packetHead.Write(stream);
+	packetData.Write(stream);
 
-	if (sendPacketToYellowPages(stream))
-		return true;
-	// TODO: Send the stream (Agent::sendPacketToYellowPages)
-
-	return false;
+	sendPacketToYellowPages(stream);
 }
