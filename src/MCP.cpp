@@ -79,7 +79,13 @@ bool MCP::queryMCCsForItem(int itemId)
 {
 	// TODO:
 	// 1) Create a query packet and fill it
+	PacketQueryMCCsForItem packet;
+	packet.itemId = itemId;
+
 	// 2) Serialize it into an output stream
+	OutputMemoryStream stream;
+	packet.Write(stream);
 	// 3) Send it to the yellow pages (sendPacketToYellowPages() method)
-	return true;
+
+	return 	sendPacketToYellowPages(stream);;
 }
