@@ -205,7 +205,16 @@ void ModuleYellowPages::OnPacketReceived(TCPSocketPtr socket, InputMemoryStream 
 	}
 	else if (inPacketHead.packetType == PacketType::QueryMCCsForItem)
 	{
+		PacketQueryMCCsForItem inPacketData;
+		inPacketData.Read(stream);
 
+
+		OutputMemoryStream outStream;
+		PacketHeader outPacket;
+		outPacket.packetType = PacketType::ReturnMCCsForItem;
+		outPacket.dstAgentId = inPacketHead.srcAgentId;
+		outPacket.Write(outStream);
+		socket->SendPacket(outStream.GetBufferPtr(), outStream.GetSize());
 	}
 	// TODO: Handle packet type PacketType::QueryMCCsForItem
 }

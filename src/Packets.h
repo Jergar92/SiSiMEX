@@ -117,6 +117,11 @@ public:
 	{
 		stream.Write(adresses.size());
 	    
+		
+		for (std::list<AgentLocation>::iterator it = adresses.begin(); it!= adresses.end(); it++)
+		{			
+			it->Write(stream);
+		}
 	/*	for (std::list<AgentLocation>::iterator item; item <  ;item++) 
 		{
 			
