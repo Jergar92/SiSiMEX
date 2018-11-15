@@ -115,7 +115,7 @@ public:
 	}
 	void Write(OutputMemoryStream &stream) 
 	{
-		stream.Write(adresses.size());
+		stream.Write((int)adresses.size());
 	    
 		
 		for (std::list<AgentLocation>::iterator it = adresses.begin(); it!= adresses.end(); it++)

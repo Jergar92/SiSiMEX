@@ -208,12 +208,18 @@ void ModuleYellowPages::OnPacketReceived(TCPSocketPtr socket, InputMemoryStream 
 		PacketQueryMCCsForItem inPacketData;
 		inPacketData.Read(stream);
 
-
+	
 		OutputMemoryStream outStream;
 		PacketHeader outPacket;
-		outPacket.packetType = PacketType::ReturnMCCsForItem;
 		outPacket.dstAgentId = inPacketHead.srcAgentId;
+		outPacket.packetType = PacketType::ReturnMCCsForItem;
 		outPacket.Write(outStream);
+
+		PacketReturnMCCsForItem return_mcc;
+		std::list<AgentLocation> &mccs(_mccByItem[inPacketData.itemId]);
+		return_mcc.adresses = mccs;
+		return_mcc.Write(outStream);
+
 		socket->SendPacket(outStream.GetBufferPtr(), outStream.GetSize());
 	}
 	// TODO: Handle packet type PacketType::QueryMCCsForItem

@@ -49,10 +49,16 @@ void MCP::OnPacketReceived(TCPSocketPtr socket, const PacketHeader &packetHeader
 	if (state() == ST_REQUESTING_MCCs && packetType == PacketType::ReturnMCCsForItem)
 	{
 		iLog << "OnPacketReceived PacketType::ReturnMCCsForItem " << _requestedItemId;
-		PacketQueryMCCsForItem packet;
+		PacketReturnMCCsForItem packet;
 
 		packet.Read(stream);
-		iLog << "MCC agent locations " << packet.itemId;
+		for (std::list<AgentLocation>::iterator it= packet.adresses.begin(); it != packet.adresses.end(); it++)
+		{
+			iLog << "MCC agent agentId " << it->agentId;
+			iLog << "MCC agent hostIP " << it->hostIP;
+			iLog << "MCC agent hostPort " << it->hostPort;
+
+		}
 		socket->Disconnect();
 		setState(ST_ITERATING_OVER_MCCs);
 
@@ -84,6 +90,11 @@ bool MCP::queryMCCsForItem(int itemId)
 
 	// 2) Serialize it into an output stream
 	OutputMemoryStream stream;
+	PacketHeader packetHead;
+	packetHead.packetType = PacketType::QueryMCCsForItem;
+	packetHead.srcAgentId = id();
+
+	packetHead.Write(stream);
 	packet.Write(stream);
 	// 3) Send it to the yellow pages (sendPacketToYellowPages() method)
 
