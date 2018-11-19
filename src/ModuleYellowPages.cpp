@@ -55,6 +55,9 @@ bool ModuleYellowPages::updateGUI()
 {
 	ImGui::Begin("Yellow Pages");
 
+	// Number of sockets
+	App->networkManager->drawInfoGUI();
+
 	ImGuiTreeNodeFlags flags = ImGuiTreeNodeFlags_DefaultOpen;
 	if (ImGui::CollapsingHeader("Registered MCCs", flags))
 	{
@@ -90,9 +93,9 @@ bool ModuleYellowPages::stop()
 
 bool ModuleYellowPages::startService()
 {
-	iLog << "---------------------------------------------------";
-	iLog << "              SiSiMEX: Yellow Pages                ";
-	iLog << "---------------------------------------------------";
+	iLog << "--------------------------------------------";
+	iLog << "           SiSiMEX: Yellow Pages            ";
+	iLog << "--------------------------------------------";
 	iLog << "";
 
 	// Create listen socket
@@ -135,16 +138,12 @@ void ModuleYellowPages::OnAccepted(TCPSocketPtr socket)
 
 void ModuleYellowPages::OnPacketReceived(TCPSocketPtr socket, InputMemoryStream &stream)
 {
-	iLog << "OnPacketReceived: ";
-
 	// Read packet header
 	PacketHeader inPacketHead;
 	inPacketHead.Read(stream);
 
 	if (inPacketHead.packetType == PacketType::RegisterMCC)
 	{
-		iLog << "PacketType::RegisterMCC";
-
 		// Read the packet
 		PacketRegisterMCC inPacketData;
 		inPacketData.Read(stream);
@@ -159,10 +158,6 @@ void ModuleYellowPages::OnPacketReceived(TCPSocketPtr socket, InputMemoryStream 
 		// Host address
 		std::string hostAddress = socket->RemoteAddress().GetString();
 
-		iLog << " - MCC Agent ID: " << inPacketHead.srcAgentId;
-		iLog << " - Contributed Item ID: " << inPacketData.itemId;
-		iLog << " - Remote host address: " << hostAddress;
-
 		// Send RegisterMCCAck packet
 		OutputMemoryStream outStream;
 		PacketHeader outPacket;
@@ -173,8 +168,6 @@ void ModuleYellowPages::OnPacketReceived(TCPSocketPtr socket, InputMemoryStream 
 	}
 	else if (inPacketHead.packetType == PacketType::UnregisterMCC)
 	{
-		iLog << "PacketType::UnregisterMCC";
-
 		// Read the packet
 		PacketUnregisterMCC inPacketData;
 		inPacketData.Read(stream);
@@ -192,41 +185,47 @@ void ModuleYellowPages::OnPacketReceived(TCPSocketPtr socket, InputMemoryStream 
 			}
 		}
 
-		iLog << " - MCC Agent ID: " << inPacketHead.srcAgentId;
-		iLog << " - Contributed Item ID: " << inPacketData.itemId;
-
-		// Send RegisterMCCAck packet
-		OutputMemoryStream outStream;
-		PacketHeader outPacket;
-		outPacket.packetType = PacketType::UnregisterMCCAck;
-		outPacket.dstAgentId = inPacketHead.srcAgentId;
-		outPacket.Write(outStream);
-		socket->SendPacket(outStream.GetBufferPtr(), outStream.GetSize());
+		//// Send RegisterMCCAck packet
+		//OutputMemoryStream outStream;
+		//PacketHeader outPacket;
+		//outPacket.packetType = PacketType::UnregisterMCCAck;
+		//outPacket.dstAgentId = inPacketHead.srcAgentId;
+		//outPacket.Write(outStream);
+		//socket->SendPacket(outStream.GetBufferPtr(), outStream.GetSize());
 	}
 	else if (inPacketHead.packetType == PacketType::QueryMCCsForItem)
 	{
+		// Read packet
 		PacketQueryMCCsForItem inPacketData;
 		inPacketData.Read(stream);
 
-	
+		// Response packet
+		PacketReturnMCCsForItem outPacketData;
+
+		// Obtain the MCCAddresses
+		auto itemId = inPacketData.itemId;
+		auto &mccAddressList = _mccByItem[itemId];
+		for (auto &mccAddress : mccAddressList) {
+			outPacketData.mccAddresses.push_back(mccAddress);
+		}
+
+		// Send response packet
 		OutputMemoryStream outStream;
-		PacketHeader outPacket;
-		outPacket.dstAgentId = inPacketHead.srcAgentId;
-		outPacket.packetType = PacketType::ReturnMCCsForItem;
-		outPacket.Write(outStream);
-
-		PacketReturnMCCsForItem return_mcc;
-		std::list<AgentLocation> &mccs(_mccByItem[inPacketData.itemId]);
-		return_mcc.adresses = mccs;
-		return_mcc.Write(outStream);
-
+		PacketHeader outPacketHead;
+		outPacketHead.packetType = PacketType::ReturnMCCsForItem;
+		outPacketHead.dstAgentId = inPacketHead.srcAgentId;
+		outPacketHead.Write(outStream);
+		outPacketData.Write(outStream);
 		socket->SendPacket(outStream.GetBufferPtr(), outStream.GetSize());
 	}
-	// TODO: Handle packet type PacketType::QueryMCCsForItem
+	else
+	{
+		wLog << "OnPacketReceived() - Unexpected PacketType.";
+	}
 }
 
 void ModuleYellowPages::OnDisconnected(TCPSocketPtr socket)
 {
 	// Nothing to do
-	iLog << "Socket disconnected gracefully";
+	//iLog << "Socket disconnected gracefully";
 }

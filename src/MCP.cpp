@@ -1,4 +1,5 @@
 #include "MCP.h"
+#include "UCP.h"
 #include "Application.h"
 #include "ModuleAgentContainer.h"
 
@@ -8,14 +9,17 @@ enum State
 	ST_INIT,
 	ST_REQUESTING_MCCs,
 	ST_ITERATING_OVER_MCCs,
+
+	// TODO: Other states
+
 	ST_NEGOTIATION_FINISHED
 };
 
-MCP::MCP(Node *node, uint16_t requestedItemID, uint16_t contributedItemID) :
+MCP::MCP(Node *node, uint16_t requestedItemID, uint16_t contributedItemID, unsigned int searchDepth) :
 	Agent(node),
 	_requestedItemId(requestedItemID),
 	_contributedItemId(contributedItemID),
-	_negotiationAgreement(false)
+	_searchDepth(searchDepth)
 {
 	setState(ST_INIT);
 }
@@ -32,41 +36,65 @@ void MCP::update()
 		queryMCCsForItem(_requestedItemId);
 		setState(ST_REQUESTING_MCCs);
 		break;
+
 	case ST_ITERATING_OVER_MCCs:
-		// To do in the next session...
+		// TODO: Handle this state
+		break;
+
+	// TODO: Handle other states
+
 	default:;
 	}
 }
 
 void MCP::stop()
 {
+	// TODO: Destroy the underlying search hierarchy (UCP->MCP->UCP->...)
+
 	destroy();
 }
 
 void MCP::OnPacketReceived(TCPSocketPtr socket, const PacketHeader &packetHeader, InputMemoryStream &stream)
 {
 	const PacketType packetType = packetHeader.packetType;
-	if (state() == ST_REQUESTING_MCCs && packetType == PacketType::ReturnMCCsForItem)
+
+	switch (packetType)
 	{
-		iLog << "OnPacketReceived PacketType::ReturnMCCsForItem " << _requestedItemId;
-		PacketReturnMCCsForItem packet;
-
-		packet.Read(stream);
-		for (std::list<AgentLocation>::iterator it= packet.adresses.begin(); it != packet.adresses.end(); it++)
+	case PacketType::ReturnMCCsForItem:
+		if (state() == ST_REQUESTING_MCCs)
 		{
-			iLog << "MCC agent agentId " << it->agentId;
-			iLog << "MCC agent hostIP " << it->hostIP;
-			iLog << "MCC agent hostPort " << it->hostPort;
+			// Read the packet
+			PacketReturnMCCsForItem packetData;
+			packetData.Read(stream);
 
+			// Log the returned MCCs
+			for (auto &mccdata : packetData.mccAddresses)
+			{
+				uint16_t agentId = mccdata.agentId;
+				const std::string &hostIp = mccdata.hostIP;
+				uint16_t hostPort = mccdata.hostPort;
+				//iLog << " - MCC: " << agentId << " - host: " << hostIp << ":" << hostPort;
+			}
+
+			// Store the returned MCCs from YP
+			_mccRegisters.swap(packetData.mccAddresses);
+
+			// Select the first MCC to negociate
+			_mccRegisterIndex = 0;
+			setState(ST_ITERATING_OVER_MCCs);
+
+			socket->Disconnect();
 		}
-		socket->Disconnect();
-		setState(ST_ITERATING_OVER_MCCs);
+		else
+		{
+			wLog << "OnPacketReceived() - PacketType::ReturnMCCsForItem was unexpected.";
+		}
+		break;
 
-		// TODO:
-		// 1) Deserialize the packet
-		// 2) Log the received MCC agent locations
-		// 3) Disconnect the socket
-		// 4) Set the next state (ST_ITERATING_OVER_MCCs) to start the search (for the next session)
+	// TODO: Handle other packets
+
+	default:
+		wLog << "OnPacketReceived() - Unexpected PacketType.";
 	}
 }
 
@@ -77,26 +105,25 @@ bool MCP::negotiationFinished() const
 
 bool MCP::negotiationAgreement() const
 {
-	return _negotiationAgreement;
+	return false; // TODO: Did the child UCP find a solution?
 }
 
 
 bool MCP::queryMCCsForItem(int itemId)
 {
-	// TODO:
-	// 1) Create a query packet and fill it
-	PacketQueryMCCsForItem packet;
-	packet.itemId = itemId;
-
-	// 2) Serialize it into an output stream
-	OutputMemoryStream stream;
+	// Create message header and data
 	PacketHeader packetHead;
 	packetHead.packetType = PacketType::QueryMCCsForItem;
 	packetHead.srcAgentId = id();
+	packetHead.dstAgentId = -1;
+	PacketQueryMCCsForItem packetData;
+	packetData.itemId = _requestedItemId;
 
+	// Serialize message
+	OutputMemoryStream stream;
 	packetHead.Write(stream);
-	packet.Write(stream);
-	// 3) Send it to the yellow pages (sendPacketToYellowPages() method)
+	packetData.Write(stream);
 
-	return 	sendPacketToYellowPages(stream);;
+	// 1) Ask YP for MCC hosting the item 'itemId'
+	return sendPacketToYellowPages(stream);
 }

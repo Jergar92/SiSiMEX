@@ -13,10 +13,17 @@ enum class PacketType
 	RegisterMCC,
 	RegisterMCCAck,
 	UnregisterMCC,
-	UnregisterMCCAck,
+
 	// MCP <-> YP
 	QueryMCCsForItem,
 	ReturnMCCsForItem,
+	
+	// MCP <-> MCC
+	// TODO
+	
+	// UCP <-> UCC
+	// TODO
+	
 	Last
 };
 
@@ -48,9 +55,6 @@ public:
 	}
 };
 
-
-// MCC <-> YP
-
 /**
  * To register a MCC we need to know which resource/item is
  * being provided by the MCC agent.
@@ -71,26 +75,12 @@ public:
 */
 using PacketUnregisterMCC = PacketRegisterMCC;
 
-
-// MCP <-> YP
+/**
+* The information is the same required for PacketRegisterMCC so...
+*/
+using PacketQueryMCCsForItem = PacketRegisterMCC;
 
 /**
- * PacketQueryMCCsForItem
- * The information is the same required for PacketRegisterMCC so...
- */
-// TODO
-class PacketQueryMCCsForItem {
-public:
-	uint16_t itemId; // Which item has to be registered?
-	void Read(InputMemoryStream &stream) {
-		stream.Read(itemId);
-	}
-	void Write(OutputMemoryStream &stream) {
-		stream.Write(itemId);
-	}
-};
-/**
- * class PacketReturnMCCsForItem
  * This packet is the response for PacketQueryMCCsForItem and
  * is sent by an MCP (MultiCastPetitioner) agent.
  * It contains a list of the addresses of MCC agents contributing
@@ -98,39 +88,32 @@ public:
  */
 class PacketReturnMCCsForItem {
 public:
-	std::list<AgentLocation> adresses;
-	
-	void Read(InputMemoryStream &stream) 
-	{
-		int size = 0;
-		stream.Read(size);
-
-		for(int i = 0; i < size;i++)
-		{
-			AgentLocation item;
-			item.Read(stream);
-			adresses.push_back(item);
+	std::vector<AgentLocation> mccAddresses;
+	void Read(InputMemoryStream &stream) {
+		uint16_t count;
+		stream.Read(count);
+		mccAddresses.resize(count);
+		for (auto &mccAddress : mccAddresses) {
+			mccAddress.Read(stream);
 		}
-			
 	}
-	void Write(OutputMemoryStream &stream) 
-	{
-		stream.Write((int)adresses.size());
-	    
-		
-		for (std::list<AgentLocation>::iterator it = adresses.begin(); it!= adresses.end(); it++)
-		{			
-			it->Write(stream);
+	void Write(OutputMemoryStream &stream) {
+		auto count = static_cast<uint16_t>(mccAddresses.size());
+		stream.Write(count);
+		for (auto &mccAddress : mccAddresses) {
+			mccAddress.Write(stream);
 		}
-	/*	for (std::list<AgentLocation>::iterator item; item <  ;item++) 
-		{
-			
-			
-		
-		}*/
 	}
-
-
-
 };
+
+
+
+// MCP <-> MCC
+
+//TODO
+
+
+
+// UCP <-> UCC
+
 // TODO
