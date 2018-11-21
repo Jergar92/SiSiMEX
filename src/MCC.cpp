@@ -9,7 +9,9 @@ enum State
 	ST_INIT,
 	ST_REGISTERING,
 	ST_IDLE,
-	
+	ST_NEGOTIATING,
+	ST_UNREGISTERING,
+
 	// TODO: Other states
 
 	ST_FINISHED
@@ -42,11 +44,21 @@ void MCC::update()
 		break;
 
 	case ST_REGISTERING:
+		
 		// See OnPacketReceived()
 		break;
+	case ST_IDLE:
 
+		break;
 		// TODO: Handle other states
-
+	case ST_NEGOTIATING:
+		if (_ucc->IsFinish())
+			setState(ST_UNREGISTERING);
+		break;
+	case ST_UNREGISTERING:
+		setState(ST_FINISHED);
+		destroyChildUCC();
+		break;
 	case ST_FINISHED:
 		destroy();
 	}
@@ -77,6 +89,13 @@ void MCC::OnPacketReceived(TCPSocketPtr socket, const PacketHeader &packetHeader
 		else
 		{
 			wLog << "OnPacketReceived() - PacketType::RegisterMCCAck was unexpected.";
+		}
+		break;
+	case PacketType::MCPNegotiateMCCRequest:
+		if (isIdling())
+		{
+			setState(ST_NEGOTIATING);
+			createChildUCC();
 		}
 		break;
 
@@ -142,10 +161,17 @@ void MCC::unregisterFromYellowPages()
 
 void MCC::createChildUCC()
 {
+	_ucc.reset(new UCC(node(), _contributedItemId, _constraintItemId));
+	
 	// TODO: Create a unicast contributor
 }
 
 void MCC::destroyChildUCC()
 {
+	if (_ucc.get())
+	{
+
+		_ucc.reset();
+	}
 	// TODO: Destroy the unicast contributor child
 }
