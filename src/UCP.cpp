@@ -8,7 +8,7 @@
 
 
 UCP::UCP(Node *node, uint16_t requestedItemId, uint16_t contributedItemId, const AgentLocation &uccLocation, unsigned int searchDepth) :
-	Agent(node),_requestedItemId(requestedItemId), _contributedItemId(contributedItemId)
+	Agent(node),_requestedItemId(requestedItemId), _contributedItemId(contributedItemId), ucc_location(uccLocation)
 {
 	// TODO: Save input parameters
 }

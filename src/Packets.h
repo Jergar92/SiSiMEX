@@ -125,9 +125,11 @@ public:
 
 	void Read(InputMemoryStream &stream) {
 		stream.Read(accepted);
+		ucc_location.Read(stream);
 	}
 	void Write(OutputMemoryStream &stream) {
 		stream.Write(accepted);
+		ucc_location.Write(stream);
 	}
 };
 //TODO

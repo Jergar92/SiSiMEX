@@ -22,6 +22,8 @@ public:
 
 	uint16_t _requestedItemId;
 	uint16_t _contributedItemId;
+	AgentLocation ucc_location;
+
 	// TODO
 };
 

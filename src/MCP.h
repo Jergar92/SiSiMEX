@@ -38,7 +38,7 @@ private:
 	bool queryMCCsForItem(int itemId);
 
 
-	void createChildUCP(AgentLocation &ucc_location);
+	void createChildUCP(const AgentLocation &ucc_location);
 
 	void destroyChildUCP();
 
