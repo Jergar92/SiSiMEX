@@ -96,8 +96,28 @@ void MCC::OnPacketReceived(TCPSocketPtr socket, const PacketHeader &packetHeader
 		{
 			setState(ST_NEGOTIATING);
 			createChildUCC();
-
+			
+			PacketHeader pkt_header;
+			pkt_header.packetType = PacketType::MCCNegotiateMCPAnswer;
+		
+			OutputMemoryStream packet;
 			PacketMCCNegotiateMCPAnswer pkt_answer;
+			AgentLocation ucclocation;
+
+			ucclocation.hostIP = socket->RemoteAddress().GetIPString;
+			ucclocation.agentId = _ucc->id();
+			ucclocation.hostPort = LISTEN_PORT_AGENTS;
+
+			pkt_answer.accepted = true;
+			
+			pkt_answer.ucc_location = ucclocation;
+			
+			pkt_header.Write(packet);
+			pkt_answer.Write(packet);
+		
+			socket->Send(packet.GetBufferPtr(), packet.GetSize());
+
+
 		}
 		break;
 
