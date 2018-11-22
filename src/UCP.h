@@ -20,6 +20,8 @@ public:
 	UCP* asUCP() override { return this; }
 	void OnPacketReceived(TCPSocketPtr socket, const PacketHeader &packetHeader, InputMemoryStream &stream) override;
 
+	uint16_t _requestedItemId;
+	uint16_t _contributedItemId;
 	// TODO
 };
 
