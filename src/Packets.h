@@ -27,6 +27,7 @@ enum class PacketType
 	UCPNegotiateUCCItemRequest,
 	UCCNegotiateUCPConstrainRequest,
 
+	UCPNegotiateUCCConstrainResult,
 
 	UCCNegotiateUCPAnswer,
 	// TODO
