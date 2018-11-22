@@ -116,6 +116,11 @@ public:
 class PacketMCPNegotiateMCCRequest {
 public:
 
+
+	void Read(InputMemoryStream &stream) {
+	}
+	void Write(OutputMemoryStream &stream) {
+	}
 };
 
 class PacketMCCNegotiateMCPAnswer {
