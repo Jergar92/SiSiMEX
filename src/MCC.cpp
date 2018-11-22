@@ -96,6 +96,8 @@ void MCC::OnPacketReceived(TCPSocketPtr socket, const PacketHeader &packetHeader
 		{
 			setState(ST_NEGOTIATING);
 			createChildUCC();
+
+			PacketMCCNegotiateMCPAnswer pkt_answer;
 		}
 		break;
 
