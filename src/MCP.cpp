@@ -39,9 +39,27 @@ void MCP::update()
 		break;
 
 	case ST_ITERATING_OVER_MCCs:
-		// TODO: Handle this state
+	{
+		if (_mccRegisters.empty() || _mccRegisters.size() < _mccRegisterIndex)
+			setState(ST_NEGOTIATION_FINISHED);
+
+		OutputMemoryStream packet;
+		PacketHeader pkt_header;
+		pkt_header.packetType = PacketType::MCPNegotiateMCCRequest;
+		PacketMCPNegotiateMCCRequest pkt_request;
+
+		packet.Write(pkt_header);
+		packet.Write(pkt_request);
+
+		AgentLocation agent = _mccRegisters[_mccRegisterIndex++];
+		sendPacketToAgent(agent.hostIP, agent.hostPort, packet);
+		setState(ST_WAITING_ACCEPTANCE);
+
+	}
+			// TODO: Handle this state
 		break;
-		case ST_WAITING_ACCEPTANCE:
+
+	case ST_WAITING_ACCEPTANCE:
 		break;
 	case ST_NEGOTIATING:
 		break;
@@ -95,7 +113,27 @@ void MCP::OnPacketReceived(TCPSocketPtr socket, const PacketHeader &packetHeader
 			wLog << "OnPacketReceived() - PacketType::ReturnMCCsForItem was unexpected.";
 		}
 		break;
+	case PacketType::MCCNegotiateMCPAnswer:
+		if (state() == ST_WAITING_ACCEPTANCE)
+		{
+			PacketMCCNegotiateMCPAnswer pkt_answer;
+			pkt_answer.Read(stream);
+			if (pkt_answer.accepted)
+			{
+				setState(ST_NEGOTIATING);				
+				createChildUCP(pkt_answer.ucc_location);
+			}
+			else
+			{
+				setState(ST_ITERATING_OVER_MCCs);
 
+			}
+		}
+		else
+		{
+			wLog << "OnPacketReceived() - PacketType::MCCNegotiateMCPAnswer was unexpected.";
+		}
+		break;
 	// TODO: Handle other packets
 
 	default:
@@ -131,4 +169,14 @@ bool MCP::queryMCCsForItem(int itemId)
 
 	// 1) Ask YP for MCC hosting the item 'itemId'
 	return sendPacketToYellowPages(stream);
+}
+
+void MCP::createChildUCP(const AgentLocation &ucc_location)
+{
+	_ucp.reset(new UCP(node(), _requestedItemId, _contributedItemId, ucc_location, _searchDepth));
+
+}
+
+void MCP::destroyChildUCP()
+{
 }

@@ -37,6 +37,11 @@ private:
 
 	bool queryMCCsForItem(int itemId);
 
+
+	void createChildUCP(AgentLocation &ucc_location);
+
+	void destroyChildUCP();
+
 	uint16_t _requestedItemId;
 	uint16_t _contributedItemId;
 
@@ -45,6 +50,8 @@ private:
 
 	unsigned int _searchDepth;
 
+	UCPPtr _ucp; /**< Child UCC. */
+	
 	// TODO: Add extra attributes and methods?
 };
 

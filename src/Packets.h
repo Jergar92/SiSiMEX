@@ -120,7 +120,15 @@ public:
 
 class PacketMCCNegotiateMCPAnswer {
 public:
+	bool accepted; // Which item has to be registered?
+	AgentLocation ucc_location;
 
+	void Read(InputMemoryStream &stream) {
+		stream.Read(accepted);
+	}
+	void Write(OutputMemoryStream &stream) {
+		stream.Write(accepted);
+	}
 };
 //TODO
 
