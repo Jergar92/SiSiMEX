@@ -50,7 +50,7 @@ void MCP::update()
 
 		pkt_header.Write(packet);
 		pkt_request.Write(packet);
-
+		
 		AgentLocation agent = _mccRegisters[_mccRegisterIndex++];
 		sendPacketToAgent(agent.hostIP, agent.hostPort, packet);
 		setState(ST_WAITING_ACCEPTANCE);

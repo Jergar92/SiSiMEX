@@ -4,11 +4,9 @@
 // TODO: Make an enum with the states
 enum UCCState
 {
-	UCC_ST_INIT,
-	UCC_ST_REGISTERING,
-	UCC_ST_IDLE,
-	UCC_ST_NEGOTIATING,
-	UCC_ST_UNREGISTERING,
+
+	UCC_ST_WAITING_REQUEST,
+	UCC_ST_WAITING_CONSTRAIN,
 
 	// TODO: Other states
 
@@ -36,6 +34,21 @@ void UCC::OnPacketReceived(TCPSocketPtr socket, const PacketHeader &packetHeader
 
 	switch (packetType)
 	{
+	case PacketType::UCPNegotiateUCCItemRequest:
+		if (state() == UCC_ST_WAITING_REQUEST)
+		{
+			PacketUCPNegotiateUCCItemRequest item_request;
+			item_request.Read(stream);
+			if (item_request.itemId == _contributedItemId)
+			{
+
+			}
+		}
+		else
+		{
+			wLog << "OnPacketReceived() - UCPNegotiateUCCItemRequest - Unexpected PacketType.";
+
+		}
 		// TODO: Handle packets
 
 	default:

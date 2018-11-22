@@ -24,7 +24,10 @@ enum class PacketType
 	// TODO
 	
 	// UCP <-> UCC
-	UCPNegotiateUCCRequest,
+	UCPNegotiateUCCItemRequest,
+	UCCNegotiateUCPConstrainRequest,
+
+
 	UCCNegotiateUCPAnswer,
 	// TODO
 	
@@ -142,25 +145,7 @@ public:
 
 
 // UCP <-> UCC
-class PacketUCPNegotiateUCCRequest {
-public:
-	uint16_t itemRequestId; // Which item has to be registered?
-	void Read(InputMemoryStream &stream) {
-		stream.Read(itemRequestId);
-	}
-	void Write(OutputMemoryStream &stream) {
-		stream.Write(itemRequestId);
-	}
-};
+using PacketUCPNegotiateUCCItemRequest = PacketRegisterMCC;
+using PacketUCCNegotiateUCPConstrainRequest = PacketRegisterMCC;
 
-class PacketUCCNegotiateUCPAnswer {
-public:
-	uint16_t itemConstrainId; // Which item has to be registered?
-	void Read(InputMemoryStream &stream) {
-		stream.Read(itemConstrainId);
-	}
-	void Write(OutputMemoryStream &stream) {
-		stream.Write(itemConstrainId);
-	}
-};
 // TODO
