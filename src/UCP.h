@@ -24,7 +24,7 @@ public:
 
 	uint16_t _requestedItemId;
 	uint16_t _contributedItemId;
-
+	bool final_agrement = false;
 	AgentLocation ucc_location;
 	int searchDepth = 0;
 	// TODO
