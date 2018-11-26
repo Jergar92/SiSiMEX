@@ -52,6 +52,19 @@ void UCP::update()
 		case UCPState::UCP_ST_REQUEST:
 				break;
 		case UCPState::UCP_ST_RESOLVING_CONSTRAIN:
+			if (_mcp->negotiationFinished())
+			{
+				PacketHeader packet;
+				packet.packetType = PacketType::UCPNegotiateUCCConstrainResult;
+
+				PacketUCPNegotiateUCCConstrainResult constrain_result;
+				constrain_result.agrement = _mcp->negotiationAgreement();
+
+				OutputMemoryStream stream;
+				packet.Write(stream);
+				constrain_result.Write(stream);
+				sendPacketToAgent(ucc_location.hostIP, ucc_location.hostPort, stream);
+			}
 			break;
 		case UCPState::UCP_ST_SENDING_CONSTRAIN:
 			break;
@@ -108,6 +121,10 @@ void UCP::OnPacketReceived(TCPSocketPtr socket, const PacketHeader &packetHeader
 
 				//fail
 			}
+			if (searchDepth < 6)
+			{
+				createChildMCP(item_request.itemId);
+			}
 			socket->SendPacket(stream.GetBufferPtr(), stream.GetSize());
 		}
 		else
@@ -122,6 +139,7 @@ void UCP::OnPacketReceived(TCPSocketPtr socket, const PacketHeader &packetHeader
 		{
 			PacketUCCNegotiateUCPACK item_ack;
 			item_ack.Read(stream);
+			final_agrement = item_ack.agrement = final_agrement;
 			setState(UCP_ST_FINISHED);
 		}
 		else
@@ -140,3 +158,9 @@ bool UCP::IsFinish()
 {
 	return state()==UCP_ST_FINISHED;
 }
+
+void UCP::createChildMCP(uint16_t request)
+{
+	_mcp.reset(new MCP(node(), request, _contributedItemId, searchDepth));
+}
+

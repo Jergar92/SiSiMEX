@@ -149,7 +149,6 @@ public:
 using PacketUCPNegotiateUCCItemRequest = PacketRegisterMCC;
 using PacketUCCNegotiateUCPConstrainRequest = PacketRegisterMCC;
 
-using PacketUCPNegotiateUCCConstrainResult = PacketRegisterMCC;
 class PacketUCPNegotiateUCCConstrainResult {
 public:
 	bool agrement; // Which item has to be registered?
@@ -161,6 +160,6 @@ public:
 		stream.Write(agrement);
 	}
 };
-using PacketUCCNegotiateUCPACK = PacketRegisterMCC;
+using PacketUCCNegotiateUCPACK = PacketUCPNegotiateUCCConstrainResult;
 
 // TODO

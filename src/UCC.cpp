@@ -68,10 +68,13 @@ void UCC::OnPacketReceived(TCPSocketPtr socket, const PacketHeader &packetHeader
 			constrain_results.Read(stream);
 			final_agrement = constrain_results.agrement;
 
+			PacketUCCNegotiateUCPACK packet_ack;
+			packet_ack.agrement = final_agrement;
 			OutputMemoryStream stream;
 			PacketHeader packet;
 			packet.packetType = PacketType::UCCNegotiateUCPACK;
 			packet.Write(stream);
+			packet_ack.Write(stream);
 			socket->SendPacket(stream.GetBufferPtr(), stream.GetSize());
 		}
 		else

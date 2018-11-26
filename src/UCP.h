@@ -20,11 +20,15 @@ public:
 	UCP* asUCP() override { return this; }
 	void OnPacketReceived(TCPSocketPtr socket, const PacketHeader &packetHeader, InputMemoryStream &stream) override;
 	bool IsFinish();
+	void createChildMCP(uint16_t request);
 
 	uint16_t _requestedItemId;
 	uint16_t _contributedItemId;
-	AgentLocation ucc_location;
 
+	AgentLocation ucc_location;
+	int searchDepth = 0;
 	// TODO
+	MCPPtr _mcp;
+
 };
 

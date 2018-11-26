@@ -21,6 +21,7 @@ public:
 	uint16_t _constraintItemId; /**< The constraint item. */
 	
 	bool final_agrement = false;
-								// TODO
+			
+	// TODO
 };
 

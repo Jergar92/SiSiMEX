@@ -153,7 +153,7 @@ bool MCP::negotiationFinished() const
 
 bool MCP::negotiationAgreement() const
 {
-	return false; // TODO: Did the child UCP find a solution?
+	return _ucp->final_agrement; // TODO: Did the child UCP find a solution?
 }
 
 
