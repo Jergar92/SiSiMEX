@@ -19,6 +19,7 @@ public:
 	void stop() override;
 	UCP* asUCP() override { return this; }
 	void OnPacketReceived(TCPSocketPtr socket, const PacketHeader &packetHeader, InputMemoryStream &stream) override;
+	bool IsFinish();
 
 	uint16_t _requestedItemId;
 	uint16_t _contributedItemId;

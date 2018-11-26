@@ -29,7 +29,7 @@ enum class PacketType
 
 	UCPNegotiateUCCConstrainResult,
 
-	UCCNegotiateUCPAnswer,
+	UCCNegotiateUCPACK,
 	// TODO
 	
 	Last
@@ -148,5 +148,19 @@ public:
 // UCP <-> UCC
 using PacketUCPNegotiateUCCItemRequest = PacketRegisterMCC;
 using PacketUCCNegotiateUCPConstrainRequest = PacketRegisterMCC;
+
+using PacketUCPNegotiateUCCConstrainResult = PacketRegisterMCC;
+class PacketUCPNegotiateUCCConstrainResult {
+public:
+	bool agrement; // Which item has to be registered?
+
+	void Read(InputMemoryStream &stream) {
+		stream.Read(agrement);
+	}
+	void Write(OutputMemoryStream &stream) {
+		stream.Write(agrement);
+	}
+};
+using PacketUCCNegotiateUCPACK = PacketRegisterMCC;
 
 // TODO

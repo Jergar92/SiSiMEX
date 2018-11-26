@@ -62,7 +62,17 @@ void UCC::OnPacketReceived(TCPSocketPtr socket, const PacketHeader &packetHeader
 	case PacketType::UCPNegotiateUCCConstrainResult:
 		if (state() == UCC_ST_WAITING_CONSTRAIN)
 		{
+			setState(UCC_ST_FINISHED);
 
+			PacketUCPNegotiateUCCConstrainResult constrain_results;
+			constrain_results.Read(stream);
+			final_agrement = constrain_results.agrement;
+
+			OutputMemoryStream stream;
+			PacketHeader packet;
+			packet.packetType = PacketType::UCCNegotiateUCPACK;
+			packet.Write(stream);
+			socket->SendPacket(stream.GetBufferPtr(), stream.GetSize());
 		}
 		else
 		{

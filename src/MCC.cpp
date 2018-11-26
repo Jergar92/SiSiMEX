@@ -53,7 +53,13 @@ void MCC::update()
 		// TODO: Handle other states
 	case ST_NEGOTIATING:
 		if (_ucc->IsFinish())
-			setState(ST_UNREGISTERING);
+		{
+			if(_ucc->final_agrement)
+				setState(ST_UNREGISTERING);
+			else
+				setState(ST_IDLE);
+
+		}
 		break;
 	case ST_UNREGISTERING:
 		setState(ST_FINISHED);
@@ -117,6 +123,21 @@ void MCC::OnPacketReceived(TCPSocketPtr socket, const PacketHeader &packetHeader
 		
 			socket->Send(packet.GetBufferPtr(), packet.GetSize());
 
+
+		}
+		else
+		{
+			PacketHeader pkt_header;
+			pkt_header.packetType = PacketType::MCCNegotiateMCPAnswer;
+
+			OutputMemoryStream packet;
+			PacketMCCNegotiateMCPAnswer pkt_answer;
+
+			pkt_answer.accepted = false;
+			pkt_header.Write(packet);
+			pkt_answer.Write(packet);
+
+			socket->Send(packet.GetBufferPtr(), packet.GetSize());
 
 		}
 		break;
@@ -192,7 +213,7 @@ void MCC::destroyChildUCC()
 {
 	if (_ucc.get())
 	{
-
+		_ucc->stop();
 		_ucc.reset();
 	}
 	// TODO: Destroy the unicast contributor child

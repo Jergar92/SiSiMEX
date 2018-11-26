@@ -60,8 +60,13 @@ void MCP::update()
 		break;
 
 	case ST_WAITING_ACCEPTANCE:
+		
 		break;
 	case ST_NEGOTIATING:
+		if (_ucp->IsFinish())
+			setState(ST_ITERATING_OVER_MCCs);
+		else
+			setState(ST_NEGOTIATION_FINISHED);
 		break;
 
 	// TODO: Handle other states

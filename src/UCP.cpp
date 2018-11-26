@@ -45,8 +45,9 @@ void UCP::update()
 			OutputMemoryStream stream;
 			packet.Write(stream);
 			item_request.Write(stream);
+			sendPacketToAgent(ucc_location.hostIP, ucc_location.hostPort, stream);
+
 		}
-			//sendPacketToAgent(ucc_location.hostIP, ucc_location.hostPort)
 				break;
 		case UCPState::UCP_ST_REQUEST:
 				break;
@@ -83,15 +84,31 @@ void UCP::OnPacketReceived(TCPSocketPtr socket, const PacketHeader &packetHeader
 		{
 			PacketUCCNegotiateUCPConstrainRequest item_request;
 			item_request.Read(stream);
+			OutputMemoryStream stream;
+			PacketUCPNegotiateUCCConstrainResult constrain_result;
+			PacketHeader packet;
+			packet.packetType = PacketType::UCPNegotiateUCCConstrainResult	;
+
 			if (item_request.itemId == _contributedItemId)
 			{
+				constrain_result.agrement = true;
+
+				packet.Write(stream);
+				constrain_result.Write(stream);
+
 				//match
 
 			}
 			else
 			{
+				constrain_result.agrement = false;
+
+				packet.Write(stream);
+				constrain_result.Write(stream);
+
 				//fail
 			}
+			socket->SendPacket(stream.GetBufferPtr(), stream.GetSize());
 		}
 		else
 		{
@@ -99,8 +116,27 @@ void UCP::OnPacketReceived(TCPSocketPtr socket, const PacketHeader &packetHeader
 
 		}
 		// TODO: Handle packets
+		break;
+	case PacketType::UCCNegotiateUCPACK:
+		if (state() == UCP_ST_SENDING_CONSTRAIN)
+		{
+			PacketUCCNegotiateUCPACK item_ack;
+			item_ack.Read(stream);
+			setState(UCP_ST_FINISHED);
+		}
+		else
+		{
+			wLog << "OnPacketReceived() - UCCNegotiateUCPACK - Unexpected PacketType.";
 
+		}
+		// TODO: Handle packets
+		break;
 	default:
 		wLog << "OnPacketReceived() - Unexpected PacketType.";
 	}
+}
+
+bool UCP::IsFinish()
+{
+	return state()==UCP_ST_FINISHED;
 }
