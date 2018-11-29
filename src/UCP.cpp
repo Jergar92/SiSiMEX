@@ -2,7 +2,7 @@
 #include "MCP.h"
 #include "Application.h"
 #include "ModuleAgentContainer.h"
-
+#define MAX_DEPTH 6
 
 // TODO: Make an enum with the states
 enum UCPState
@@ -118,6 +118,12 @@ void UCP::OnPacketReceived(TCPSocketPtr socket, const PacketHeader &packetHeader
 				//match
 
 			}
+			else if(searchDepth < MAX_DEPTH)
+			{
+				setState(UCP_ST_RESOLVING_CONSTRAIN);
+
+				createChildMCP(item_request.itemId);
+			}		
 			else
 			{
 				setState(UCP_ST_SENDING_CONSTRAIN);
@@ -129,14 +135,7 @@ void UCP::OnPacketReceived(TCPSocketPtr socket, const PacketHeader &packetHeader
 
 				//fail
 			}
-			/*
-			if (searchDepth < 6)
-			{
-				setState(UCP_ST_RESOLVING_CONSTRAIN);
-
-				createChildMCP(item_request.itemId);
-			}
-			*/
+			
 			socket->SendPacket(stream.GetBufferPtr(), stream.GetSize());
 		}
 		else
@@ -174,7 +173,7 @@ bool UCP::IsFinish()
 void UCP::createChildMCP(uint16_t request)
 {
 	_mcp.reset();
-	_mcp = App->agentContainer->createMCP(node(), request, _contributedItemId, searchDepth);
+	_mcp = App->agentContainer->createMCP(node(), request, _contributedItemId, searchDepth+1);
 
 }
 
