@@ -105,12 +105,12 @@ void MCC::OnPacketReceived(TCPSocketPtr socket, const PacketHeader &packetHeader
 			
 			PacketHeader pkt_header;
 			pkt_header.packetType = PacketType::MCCNegotiateMCPAnswer;
-		
+			pkt_header.dstAgentId = packetHeader.srcAgentId;
 			OutputMemoryStream packet;
 			PacketMCCNegotiateMCPAnswer pkt_answer;
 			AgentLocation ucclocation;
 
-			ucclocation.hostIP = socket->RemoteAddress().GetIPString;
+			ucclocation.hostIP = socket->RemoteAddress().GetIPString();
 			ucclocation.agentId = _ucc->id();
 			ucclocation.hostPort = LISTEN_PORT_AGENTS;
 
@@ -121,7 +121,7 @@ void MCC::OnPacketReceived(TCPSocketPtr socket, const PacketHeader &packetHeader
 			pkt_header.Write(packet);
 			pkt_answer.Write(packet);
 		
-			socket->Send(packet.GetBufferPtr(), packet.GetSize());
+			socket->SendPacket(packet.GetBufferPtr(), packet.GetSize());
 
 
 		}
@@ -204,8 +204,9 @@ void MCC::unregisterFromYellowPages()
 
 void MCC::createChildUCC()
 {
-	_ucc.reset(new UCC(node(), _contributedItemId, _constraintItemId));
-	
+	_ucc.reset();
+	_ucc = App->agentContainer->createUCC(node(), _contributedItemId, _constraintItemId);
+
 	// TODO: Create a unicast contributor
 }
 

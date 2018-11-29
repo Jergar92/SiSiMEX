@@ -21,7 +21,7 @@ public:
 	void OnPacketReceived(TCPSocketPtr socket, const PacketHeader &packetHeader, InputMemoryStream &stream) override;
 	bool IsFinish();
 	void createChildMCP(uint16_t request);
-
+	void destroyChildMCP();
 	uint16_t _requestedItemId;
 	uint16_t _contributedItemId;
 	bool final_agrement = false;

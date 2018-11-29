@@ -46,6 +46,8 @@ void UCC::OnPacketReceived(TCPSocketPtr socket, const PacketHeader &packetHeader
 				OutputMemoryStream stream;
 				PacketHeader packet;
 				packet.packetType = PacketType::UCCNegotiateUCPConstrainRequest;
+				packet.srcAgentId = id();
+				packet.dstAgentId = packetHeader.srcAgentId;
 				PacketUCCNegotiateUCPConstrainRequest contrain_request;
 				contrain_request.itemId = _constraintItemId;
 				packet.Write(stream);
@@ -58,6 +60,7 @@ void UCC::OnPacketReceived(TCPSocketPtr socket, const PacketHeader &packetHeader
 			wLog << "OnPacketReceived() - UCPNegotiateUCCItemRequest - Unexpected PacketType.";
 
 		}
+		break;
 		// TODO: Handle packets
 	case PacketType::UCPNegotiateUCCConstrainResult:
 		if (state() == UCC_ST_WAITING_CONSTRAIN)
@@ -73,6 +76,8 @@ void UCC::OnPacketReceived(TCPSocketPtr socket, const PacketHeader &packetHeader
 			OutputMemoryStream stream;
 			PacketHeader packet;
 			packet.packetType = PacketType::UCCNegotiateUCPACK;
+			packet.srcAgentId = id();
+			packet.dstAgentId = packetHeader.srcAgentId;
 			packet.Write(stream);
 			packet_ack.Write(stream);
 			socket->SendPacket(stream.GetBufferPtr(), stream.GetSize());

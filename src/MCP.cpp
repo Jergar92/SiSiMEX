@@ -45,13 +45,16 @@ void MCP::update()
 
 		OutputMemoryStream packet;
 		PacketHeader pkt_header;
-		pkt_header.packetType = PacketType::MCPNegotiateMCCRequest;
 		PacketMCPNegotiateMCCRequest pkt_request;
+		AgentLocation agent = _mccRegisters[_mccRegisterIndex++];
+		pkt_header.packetType = PacketType::MCPNegotiateMCCRequest;
+		pkt_header.srcAgentId = id();
+		pkt_header.dstAgentId = agent.agentId;
+
 
 		pkt_header.Write(packet);
 		pkt_request.Write(packet);
-		
-		AgentLocation agent = _mccRegisters[_mccRegisterIndex++];
+
 		sendPacketToAgent(agent.hostIP, agent.hostPort, packet);
 		setState(ST_WAITING_ACCEPTANCE);
 
@@ -64,9 +67,14 @@ void MCP::update()
 		break;
 	case ST_NEGOTIATING:
 		if (_ucp->IsFinish())
-			setState(ST_ITERATING_OVER_MCCs);
-		else
-			setState(ST_NEGOTIATION_FINISHED);
+		{
+			if(_ucp->final_agrement)
+				setState(ST_NEGOTIATION_FINISHED);
+			else			
+				setState(ST_ITERATING_OVER_MCCs);
+			
+		}
+		
 		break;
 
 	// TODO: Handle other states
@@ -78,7 +86,7 @@ void MCP::update()
 void MCP::stop()
 {
 	// TODO: Destroy the underlying search hierarchy (UCP->MCP->UCP->...)
-
+	destroyChildUCP();
 	destroy();
 }
 
@@ -178,10 +186,16 @@ bool MCP::queryMCCsForItem(int itemId)
 
 void MCP::createChildUCP(const AgentLocation &ucc_location)
 {
-	_ucp.reset(new UCP(node(), _requestedItemId, _contributedItemId, ucc_location, _searchDepth));
-
+	_ucp.reset();
+	_ucp = App->agentContainer->createUCP(node(), _requestedItemId, _contributedItemId, ucc_location, _searchDepth);
+	
 }
 
 void MCP::destroyChildUCP()
 {
+	if (_ucp.get())
+	{
+		_ucp->stop();
+		_ucp.reset();
+	}
 }
