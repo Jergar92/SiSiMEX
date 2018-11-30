@@ -41,8 +41,10 @@ void MCP::update()
 	case ST_ITERATING_OVER_MCCs:
 	{
 		if (_mccRegisters.empty() || _mccRegisters.size() < _mccRegisterIndex)
+		{
 			setState(ST_NEGOTIATION_FINISHED);
-
+			break;
+		}
 		OutputMemoryStream packet;
 		PacketHeader pkt_header;
 		PacketMCPNegotiateMCCRequest pkt_request;
@@ -68,10 +70,16 @@ void MCP::update()
 	case ST_NEGOTIATING:
 		if (_ucp->IsFinish())
 		{
-			if(_ucp->final_agrement)
+			if (_ucp->final_agrement)
+			{
+				final_agreement = true;
 				setState(ST_NEGOTIATION_FINISHED);
-			else			
+			}
+			else
+			{
 				setState(ST_ITERATING_OVER_MCCs);
+				destroyChildUCP();
+			}
 			
 		}
 		
@@ -161,7 +169,7 @@ bool MCP::negotiationFinished() const
 
 bool MCP::negotiationAgreement() const
 {
-	return _ucp->final_agrement; // TODO: Did the child UCP find a solution?
+	return final_agreement; // TODO: Did the child UCP find a solution?
 }
 
 

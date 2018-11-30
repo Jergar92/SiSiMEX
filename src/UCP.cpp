@@ -55,6 +55,8 @@ void UCP::update()
 		case UCPState::UCP_ST_RESOLVING_CONSTRAIN:
 			if (_mcp->negotiationFinished())
 			{
+
+				setState(UCP_ST_SENDING_CONSTRAIN);
 				PacketHeader packet;
 				packet.packetType = PacketType::UCPNegotiateUCCConstrainResult;
 				packet.srcAgentId = id();
@@ -71,6 +73,7 @@ void UCP::update()
 		case UCPState::UCP_ST_SENDING_CONSTRAIN:
 			break;
 		case UCPState::UCP_ST_FINISHED:
+			destroyChildMCP();
 			break;
 		default:
 			break;
@@ -172,6 +175,7 @@ bool UCP::IsFinish()
 
 void UCP::createChildMCP(uint16_t request)
 {
+	destroyChildMCP();
 	_mcp.reset();
 	_mcp = App->agentContainer->createMCP(node(), request, _contributedItemId, searchDepth+1);
 

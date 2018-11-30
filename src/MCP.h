@@ -44,7 +44,7 @@ private:
 
 	uint16_t _requestedItemId;
 	uint16_t _contributedItemId;
-
+	bool final_agreement = false;
 	int _mccRegisterIndex; /**< Iterator through _mccRegisters. */
 	std::vector<AgentLocation> _mccRegisters; /**< MCCs returned by the YP. */
 

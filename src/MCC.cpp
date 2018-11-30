@@ -56,14 +56,14 @@ void MCC::update()
 		{
 			if(_ucc->final_agrement)
 				setState(ST_UNREGISTERING);
-			else
+			else			
 				setState(ST_IDLE);
+
+			destroyChildUCC();
 
 		}
 		break;
 	case ST_UNREGISTERING:
-		setState(ST_FINISHED);
-		destroyChildUCC();
 		break;
 	case ST_FINISHED:
 		destroy();
@@ -76,7 +76,7 @@ void MCC::stop()
 	destroyChildUCC();
 
 	unregisterFromYellowPages();
-	setState(ST_FINISHED);
+	setState(ST_UNREGISTERING);
 }
 
 
@@ -105,6 +105,7 @@ void MCC::OnPacketReceived(TCPSocketPtr socket, const PacketHeader &packetHeader
 			
 			PacketHeader pkt_header;
 			pkt_header.packetType = PacketType::MCCNegotiateMCPAnswer;
+			pkt_header.srcAgentId = id();
 			pkt_header.dstAgentId = packetHeader.srcAgentId;
 			OutputMemoryStream packet;
 			PacketMCCNegotiateMCPAnswer pkt_answer;
@@ -129,11 +130,13 @@ void MCC::OnPacketReceived(TCPSocketPtr socket, const PacketHeader &packetHeader
 		{
 			PacketHeader pkt_header;
 			pkt_header.packetType = PacketType::MCCNegotiateMCPAnswer;
-
+			pkt_header.srcAgentId = id();
+			pkt_header.dstAgentId = packetHeader.srcAgentId;
 			OutputMemoryStream packet;
 			PacketMCCNegotiateMCPAnswer pkt_answer;
 
 			pkt_answer.accepted = false;
+
 			pkt_header.Write(packet);
 			pkt_answer.Write(packet);
 
@@ -141,7 +144,13 @@ void MCC::OnPacketReceived(TCPSocketPtr socket, const PacketHeader &packetHeader
 
 		}
 		break;
-
+	case PacketType::UnregisterMCC:
+		if (state()== ST_UNREGISTERING)
+		{
+			setState(ST_FINISHED);
+			socket->Disconnect();
+		}
+		break;
 	// TODO: Handle other packets
 
 	default:
