@@ -22,6 +22,7 @@ MCP::MCP(Node *node, uint16_t requestedItemID, uint16_t contributedItemID, unsig
 	_contributedItemId(contributedItemID),
 	_searchDepth(searchDepth)
 {
+	final_agreement = false;
 	setState(ST_INIT);
 }
 
@@ -40,7 +41,7 @@ void MCP::update()
 
 	case ST_ITERATING_OVER_MCCs:
 	{
-		if (_mccRegisters.empty() || _mccRegisters.size() < _mccRegisterIndex)
+		if (_mccRegisters.empty() || _mccRegisters.size() <= _mccRegisterIndex)
 		{
 			setState(ST_NEGOTIATION_FINISHED);
 			break;
@@ -78,9 +79,9 @@ void MCP::update()
 			else
 			{
 				setState(ST_ITERATING_OVER_MCCs);
-				destroyChildUCP();
 			}
-			
+			destroyChildUCP();
+
 		}
 		
 		break;
@@ -124,6 +125,8 @@ void MCP::OnPacketReceived(TCPSocketPtr socket, const PacketHeader &packetHeader
 			_mccRegisters.swap(packetData.mccAddresses);
 
 			// Select the first MCC to negociate
+			final_agreement = false;
+
 			_mccRegisterIndex = 0;
 			setState(ST_ITERATING_OVER_MCCs);
 
@@ -187,7 +190,6 @@ bool MCP::queryMCCsForItem(int itemId)
 	OutputMemoryStream stream;
 	packetHead.Write(stream);
 	packetData.Write(stream);
-
 	// 1) Ask YP for MCC hosting the item 'itemId'
 	return sendPacketToYellowPages(stream);
 }

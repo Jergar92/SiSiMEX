@@ -140,7 +140,7 @@ void MCC::OnPacketReceived(TCPSocketPtr socket, const PacketHeader &packetHeader
 			pkt_header.Write(packet);
 			pkt_answer.Write(packet);
 
-			socket->Send(packet.GetBufferPtr(), packet.GetSize());
+			socket->SendPacket(packet.GetBufferPtr(), packet.GetSize());
 
 		}
 		break;
