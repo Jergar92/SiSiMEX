@@ -43,6 +43,7 @@ private:
 
 	uint16_t _contributedItemId; /**< The contributed item. */
 	uint16_t _constraintItemId; /**< The constraint item. */
-
+	bool participating = false;
+	bool final_agreement = false;
 	UCCPtr _ucc; /**< Child UCC. */
 };

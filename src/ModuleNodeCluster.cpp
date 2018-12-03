@@ -447,13 +447,16 @@ void ModuleNodeCluster::runSystem()
 		MCC *mcc = agent->asMCC();
 		if (mcc != nullptr && mcc->negotiationFinished())
 		{
-			Node *node = mcc->node();
-			node->itemList().removeItem(mcc->contributedItemId());
-			node->itemList().addItem(mcc->constraintItemId());
-			mcc->stop();
-			iLog << "MCC exchange at Node " << node->id() << ":"
-				<< " -" << mcc->contributedItemId()
-				<< " +" << mcc->constraintItemId();
+			if (mcc->negotiationAgreement())
+			{
+				Node *node = mcc->node();
+				node->itemList().removeItem(mcc->contributedItemId());
+				node->itemList().addItem(mcc->constraintItemId());
+				mcc->stop();
+				iLog << "MCC exchange at Node " << node->id() << ":"
+					<< " -" << mcc->contributedItemId()
+					<< " +" << mcc->constraintItemId();
+			}
 		}
 
 		// Update ItemList with MCPs that found a solution

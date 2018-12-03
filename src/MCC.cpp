@@ -11,6 +11,7 @@ enum State
 	ST_IDLE,
 	ST_NEGOTIATING,
 	ST_UNREGISTERING,
+	ST_NEGOTIATION_FINISH,
 
 	// TODO: Other states
 
@@ -54,14 +55,19 @@ void MCC::update()
 	case ST_NEGOTIATING:
 		if (_ucc->IsFinish())
 		{
-			if(_ucc->final_agrement)
-				setState(ST_UNREGISTERING);
+			if (_ucc->final_agrement)
+			{
+				final_agreement = true;
+				setState(ST_NEGOTIATION_FINISH);
+			}
 			else			
 				setState(ST_IDLE);
 
 			destroyChildUCC();
 
 		}
+		break;
+	case ST_NEGOTIATION_FINISH:
 		break;
 	case ST_UNREGISTERING:
 		break;
@@ -165,14 +171,14 @@ bool MCC::isIdling() const
 
 bool MCC::negotiationFinished() const
 {
-	return state() == ST_FINISHED;
+	return state() == ST_NEGOTIATION_FINISH;
 }
 
 bool MCC::negotiationAgreement() const
 {
 	// If this agent finished, means that it was an agreement
 	// Otherwise, it would return to state ST_IDLE
-	return negotiationFinished();
+	return final_agreement;
 }
 
 bool MCC::registerIntoYellowPages()
