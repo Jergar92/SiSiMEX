@@ -44,6 +44,7 @@ void MCP::update()
 		if (_mccRegisters.empty() || _mccRegisters.size() <= _mccRegisterIndex)
 		{
 			setState(ST_NEGOTIATION_FINISHED);
+			destroyChildUCP();
 			break;
 		}
 		OutputMemoryStream packet;
