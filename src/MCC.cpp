@@ -106,6 +106,8 @@ void MCC::OnPacketReceived(TCPSocketPtr socket, const PacketHeader &packetHeader
 	case PacketType::MCPNegotiateMCCRequest:
 		if (isIdling())
 		{
+			final_agreement = false;
+
 			setState(ST_NEGOTIATING);
 			createChildUCC();
 			
