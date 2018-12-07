@@ -452,11 +452,17 @@ void ModuleNodeCluster::runSystem()
 				Node *node = mcc->node();
 				node->itemList().removeItem(mcc->contributedItemId());
 				node->itemList().addItem(mcc->constraintItemId());
-				mcc->stop();
 				iLog << "MCC exchange at Node " << node->id() << ":"
 					<< " -" << mcc->contributedItemId()
 					<< " +" << mcc->constraintItemId();
 			}
+			else
+			{
+				wLog << "MCC exchange at Node " << mcc->id() << " not found:"
+					<< " -" << mcc->contributedItemId()
+					<< " +" << mcc->constraintItemId();
+			}
+			mcc->stop();
 		}
 
 		// Update ItemList with MCPs that found a solution

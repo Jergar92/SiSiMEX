@@ -70,6 +70,7 @@ void MCC::update()
 	case ST_NEGOTIATION_FINISH:
 		break;
 	case ST_UNREGISTERING:
+
 		break;
 	case ST_FINISHED:
 		destroy();
@@ -82,7 +83,7 @@ void MCC::stop()
 	destroyChildUCC();
 
 	unregisterFromYellowPages();
-	setState(ST_UNREGISTERING);
+	setState(ST_FINISHED);
 }
 
 
