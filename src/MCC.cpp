@@ -26,6 +26,15 @@ MCC::MCC(Node *node, uint16_t contributedItemId, uint16_t constraintItemId) :
 	setState(ST_INIT);
 }
 
+MCC::MCC(Node * node, uint16_t contributedItemId, uint16_t contributed_quantity, uint16_t constraintItemId):
+Agent(node),
+_contributedItemId(contributedItemId),
+_contributed_quantity(contributed_quantity),
+_constraintItemId(constraintItemId)
+{
+	setState(ST_INIT);
+}
+
 
 MCC::~MCC()
 {

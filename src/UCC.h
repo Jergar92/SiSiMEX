@@ -8,6 +8,7 @@ public:
 
 	// Constructor and destructor
 	UCC(Node *node, uint16_t contributedItemId, uint16_t constraintItemId);
+	UCC(Node *node, uint16_t contributedItemId, uint16_t contributed_quantity, uint16_t constraintItemId);
 	~UCC();
 
 	// Agent methods
@@ -19,7 +20,8 @@ public:
 	bool IsFinish();
 	uint16_t _contributedItemId; /**< The contributed item. */
 	uint16_t _constraintItemId; /**< The constraint item. */
-	
+	uint16_t _constraint_quantity; /**< The constraint item. */
+
 	bool final_agrement = false;
 			
 	// TODO

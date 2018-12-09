@@ -46,6 +46,7 @@ private:
 	void spawnMCP(int nodeId, int requestedItemId, int contributedItemId);
 
 	void spawnMCC(int nodeId, int contributedItemId, int constraintItemId);
+	void spawnMCC(int nodeId, int contributedItemId, int contributed_cuantity, int constraintItemId);
 
 	bool ValidateSpawn(int requestedItem, int petition_quantity);
 	bool ShowDealProposition(int requestedItem, int contributionItem, int & requested_quantity, int & contribution_quantity );

@@ -92,9 +92,8 @@ bool ModuleNodeCluster::updateGUI()
 					if (node->itemList().numItemsWithId(contributedItem) > 1)
 					{
 						unsigned int numItemsToContribute = node->itemList().numItemsWithId(contributedItem) -  1;
-
-					
-						/*
+				
+						
 						for (ItemId constraintItem = 0; constraintItem < MAX_ITEMS; ++constraintItem)
 						{
 							if (node->itemList().numItemsWithId(constraintItem) == 0)
@@ -117,8 +116,8 @@ bool ModuleNodeCluster::updateGUI()
 									}
 							}
 						}
-						*/
 						
+						/*
 						for (ItemId constraintItem = 0; constraintItem < MAX_ITEMS; ++constraintItem)
 						{
 							if (node->itemList().numItemsWithId(constraintItem) == 0)
@@ -129,6 +128,7 @@ bool ModuleNodeCluster::updateGUI()
 								}
 							}
 						}
+						*/
 					}
 				}
 			}
@@ -609,7 +609,7 @@ void ModuleNodeCluster::spawnMCP(int nodeId, int requestedItemId, int requested_
 	dLog << "Spawn MCP - node " << nodeId << " - req. " << requestedItemId << " - contrib. " << contributedItemId;
 	if (nodeId >= 0 && nodeId < (int)_nodes.size()) {
 		NodePtr node = _nodes[nodeId];
-		App->agentContainer->createMCP(node.get(), requestedItemId, contributedItemId, 0);
+		App->agentContainer->createMCP(node.get(), requestedItemId, requested_quantity, contributedItemId, contributed_quantity, 0);
 	}
 	else {
 		wLog << "Could not find node with ID " << nodeId;
@@ -634,6 +634,18 @@ void ModuleNodeCluster::spawnMCC(int nodeId, int contributedItemId, int constrai
 	if (nodeId >= 0 && nodeId < (int)_nodes.size()) {
 		NodePtr node = _nodes[nodeId];
 		App->agentContainer->createMCC(node.get(), contributedItemId, constraintItemId);
+	}
+	else {
+		wLog << "Could not find node with ID " << nodeId;
+	}
+}
+
+void ModuleNodeCluster::spawnMCC(int nodeId, int contributedItemId, int contributed_cuantity, int constraintItemId)
+{
+	dLog << "Spawn MCC - node " << nodeId << " contrib. " << contributedItemId << " - constr. " << constraintItemId;
+	if (nodeId >= 0 && nodeId < (int)_nodes.size()) {
+		NodePtr node = _nodes[nodeId];
+		App->agentContainer->createMCC(node.get(), contributedItemId, contributed_cuantity, constraintItemId);
 	}
 	else {
 		wLog << "Could not find node with ID " << nodeId;

@@ -18,6 +18,11 @@ UCC::UCC(Node *node, uint16_t contributedItemId, uint16_t constraintItemId) :
 {
 	// TODO: Save input parameters
 }
+UCC::UCC(Node * node, uint16_t contributedItemId, uint16_t contributed_quantity, uint16_t constraintItemId):
+Agent(node), _contributedItemId(contributedItemId), _constraint_quantity(contributed_quantity), _constraintItemId(constraintItemId)
+{
+	// TODO: Save input parameters
+}
 
 UCC::~UCC()
 {

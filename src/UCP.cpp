@@ -24,6 +24,13 @@ UCP::UCP(Node *node, uint16_t requestedItemId, uint16_t contributedItemId, const
 	// TODO: Save input parameters
 }
 
+UCP::UCP(Node * node, uint16_t requestedItemId, uint16_t requested_quantity, uint16_t contributedItemId, uint16_t contributed_quantity, const AgentLocation & uccLocation, unsigned int searchDepth):
+	Agent(node), _requestedItemId(requestedItemId), _requested_quantity(requested_quantity), _contributedItemId(contributedItemId), _contributed_quantity(contributed_quantity), ucc_location(uccLocation), searchDepth(searchDepth)
+{
+	setState(UCP_ST_INIT);
+	// TODO: Save input parameters
+}
+
 UCP::~UCP()
 {
 }
