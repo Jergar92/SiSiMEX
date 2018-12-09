@@ -39,10 +39,36 @@ static const uint16_t NULL_AGENT_ID = 0;
  */
 
 #if defined(RANDOM_INITIALIZATION)
-
-static const unsigned int MAX_ITEMS = 10U;
+enum ItemType
+{
+	COMMON,
+	RARE,
+	EPIC,
+	LEGEND,
+	NO_TYPE
+};
+static const unsigned int MAX_COMMON_ITEMS = 4U;
+static const unsigned int MAX_RARE_ITEMS = 3U;
+static const unsigned int MAX_EPIC_ITEMS = 2U;
+static const unsigned int MAX_LEGEND_ITEMS = 1U;
+static const unsigned int MAX_ITEMS = MAX_COMMON_ITEMS+ MAX_RARE_ITEMS+ MAX_EPIC_ITEMS+ MAX_LEGEND_ITEMS;
 static const unsigned int MAX_NODES = 10U;
 
+static const unsigned int GetItemType(unsigned int i)
+{
+	unsigned int check = MAX_COMMON_ITEMS;
+	if (i < check)
+		return ItemType::COMMON;
+	check += MAX_RARE_ITEMS;
+	if(i<check)
+		return ItemType::RARE;
+	check += MAX_EPIC_ITEMS;
+	if (i<check)
+		return ItemType::EPIC;
+	check += MAX_LEGEND_ITEMS;
+	if (i<check)
+		return ItemType::LEGEND;
+}
 #else
 
 static const unsigned int MAX_ITEMS = 4U;

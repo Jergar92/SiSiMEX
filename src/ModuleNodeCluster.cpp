@@ -6,7 +6,8 @@
 #include "Packets.h"
 #include "imgui/imgui.h"
 #include <sstream>
-
+#define MAX_ITEM_VALUE 8
+#define MIN_ITEM_VALUE 1
 enum State {
 	STOPPED,
 	STARTING,
@@ -92,6 +93,32 @@ bool ModuleNodeCluster::updateGUI()
 					{
 						unsigned int numItemsToContribute = node->itemList().numItemsWithId(contributedItem) -  1;
 
+					
+						/*
+						for (ItemId constraintItem = 0; constraintItem < MAX_ITEMS; ++constraintItem)
+						{
+							if (node->itemList().numItemsWithId(constraintItem) == 0)
+							{												
+								int num_to_contribute = numItemsToContribute;
+									for (unsigned int i = 0; i < numItemsToContribute; i+=MAX_ITEM_VALUE)
+									{
+										int send_to_contribute=0;
+										if(num_to_contribute >= MAX_ITEM_VALUE)
+										{
+											send_to_contribute = MAX_ITEM_VALUE;
+											num_to_contribute -= MAX_ITEM_VALUE;
+										}
+										else
+										{
+											send_to_contribute = num_to_contribute;
+										}
+											
+										spawnMCC(node->id(), contributedItem,num_to_contribute, constraintItem);
+									}
+							}
+						}
+						*/
+						
 						for (ItemId constraintItem = 0; constraintItem < MAX_ITEMS; ++constraintItem)
 						{
 							if (node->itemList().numItemsWithId(constraintItem) == 0)
@@ -190,20 +217,74 @@ bool ModuleNodeCluster::updateGUI()
 		ImGui::Begin("Nodes/Items Matrix");
 
 		static ItemId selectedItem = 0;
+		ItemId itemId = 0U;
 		static unsigned int selectedNode = 0;
 		static int comboItem = 0;
-
+		int counter = 0;
 		ImGui::Text("Item ID ");
-		ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.3f, 0.6f, 1.0f, 0.5f));
-		ImGui::PushStyleColor(ImGuiCol_ButtonActive, ImVec4(0.3f, 0.6f, 1.0f, 0.5f));
-		ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4(0.3f, 0.6f, 1.0f, 0.5f));
-		for (ItemId itemId = 0U; itemId < MAX_ITEMS; ++itemId)
+		//COMMON
+		ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.5f, 0.5f, 0.5f, 0.5f));
+		ImGui::PushStyleColor(ImGuiCol_ButtonActive, ImVec4(0.5f, 0.5f, 0.5f, 0.5f));
+		ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4(0.5f, 0.5f, 0.5f, 0.5f));
+		while(counter < MAX_COMMON_ITEMS)
 		{
 			ImGui::SameLine();
 			std::ostringstream oss;
 			oss << itemId;
 			ImGui::Button(oss.str().c_str(), ImVec2(20, 20));
 			if (itemId < MAX_ITEMS - 1) ImGui::SameLine();
+			++counter;
+			++itemId;
+		}
+		ImGui::PopStyleColor(3);
+		counter = 0;
+		//RARE
+		ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.3f, 0.3f, 1.0f, 0.5f));
+		ImGui::PushStyleColor(ImGuiCol_ButtonActive, ImVec4(0.3f, 0.3f, 1.0f, 0.5f));
+		ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4(0.3f, 0.3f, 1.0f, 0.5f));
+		while (counter < MAX_RARE_ITEMS)
+		{
+			ImGui::SameLine();
+			std::ostringstream oss;
+			oss << itemId;
+			ImGui::Button(oss.str().c_str(), ImVec2(20, 20));
+			if (itemId < MAX_ITEMS - 1) ImGui::SameLine();
+			++counter;
+			++itemId;
+		}
+		ImGui::PopStyleColor(3);
+		counter = 0;
+
+		//EPIC
+		ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.6f, 0.0f, 1.0f, 0.5f));
+		ImGui::PushStyleColor(ImGuiCol_ButtonActive, ImVec4(0.6f, 0.0f, 1.0f, 0.5f));
+		ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4(0.6f, 0.0f, 1.0f, 0.5f));
+		while (counter < MAX_EPIC_ITEMS)
+		{
+			ImGui::SameLine();
+			std::ostringstream oss;
+			oss << itemId;
+			ImGui::Button(oss.str().c_str(), ImVec2(20, 20));
+			if (itemId < MAX_ITEMS - 1) ImGui::SameLine();
+			++counter;
+			++itemId;
+		}
+		ImGui::PopStyleColor(3);
+		counter = 0;
+
+		//LEGEND
+		ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.9f, 0.6f, 0.0f, 0.5f));
+		ImGui::PushStyleColor(ImGuiCol_ButtonActive, ImVec4(0.9f, 0.6f, 0.0f, 0.5f));
+		ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4(0.9f, 0.6f, 0.0f, 0.5f));
+		while(counter < MAX_LEGEND_ITEMS)
+		{
+			ImGui::SameLine();
+			std::ostringstream oss;
+			oss << itemId;
+			ImGui::Button(oss.str().c_str(), ImVec2(20, 20));
+			if (itemId < MAX_ITEMS - 1) ImGui::SameLine();
+			++counter;
+			++itemId;
 		}
 		ImGui::PopStyleColor(3);
 
@@ -254,9 +335,12 @@ bool ModuleNodeCluster::updateGUI()
 		}
 
 		// Context menu to spawn agents
+		ImGui::SetNextWindowSize(ImVec2(450, 150));
 		if (ImGui::BeginPopup("ItemOps"))
 		{
 			int numberOfItems = _nodes[selectedNode]->itemList().numItemsWithId(selectedItem);
+			static int contribution_quantity = 1;
+			static int petition_quantity = 1;
 
 			// If it is a missing item...
 			if (numberOfItems == 0)
@@ -284,11 +368,34 @@ bool ModuleNodeCluster::updateGUI()
 					ImGui::Text("Create MultiCastPetitioner?");
 					ImGui::Separator();
 					ImGui::Text("Node %d", selectedNode);
+					ImGui::Columns(2);
+
 					ImGui::Text(" - Petition: %d", requestedItem);
+					ImGui::NextColumn();
+
+					if (ImGui::InputInt("Quantity##PetitionQuantity", &petition_quantity, 1, 100, ImGuiInputTextFlags_::ImGuiInputTextFlags_EnterReturnsTrue))
+					{
+						if (petition_quantity > MAX_ITEM_VALUE)
+							petition_quantity = MAX_ITEM_VALUE;
+						if (petition_quantity < MIN_ITEM_VALUE)
+							petition_quantity = MIN_ITEM_VALUE;
+					}
+					ImGui::NextColumn();
 
 					ImGui::Combo("Contribution", &comboItem, (const char **)&comboCStrings[0], (int)comboCStrings.size());
-					if (ImGui::Button("Spawn MCP")) {
+					ImGui::NextColumn();
+
+					if (ImGui::InputInt("Quantity##ContributionQuantity", &contribution_quantity, 1, 100, ImGuiInputTextFlags_::ImGuiInputTextFlags_EnterReturnsTrue))
+					{
+						if (contribution_quantity > MAX_ITEM_VALUE)
+							contribution_quantity = MAX_ITEM_VALUE;
+						if (contribution_quantity < MIN_ITEM_VALUE)
+							contribution_quantity = MIN_ITEM_VALUE;
+					}
+					ImGui::Columns();
+					if (ImGui::Button("Spawn MCP") /*&& ValidateSpawn(requestedItem,petition_quantity,itemIds[comboItem],contribution_quantity)*/) {
 						int contributedItem = itemIds[comboItem];
+						//spawnMCP(requestedItem,petition_quantity,contributedItem,contribution_quantity)
 						spawnMCP(selectedNode, requestedItem, contributedItem);
 						ImGui::CloseCurrentPopup();
 					}
