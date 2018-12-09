@@ -339,9 +339,9 @@ bool ModuleNodeCluster::updateGUI()
 		if (ImGui::BeginPopup("ItemOps"))
 		{
 			int numberOfItems = _nodes[selectedNode]->itemList().numItemsWithId(selectedItem);
-			static int contribution_quantity = 1;
-			static int petition_quantity = 1;
-
+			int contribution_quantity = 1;
+			int petition_quantity = 1;
+			bool validate = false;
 			// If it is a missing item...
 			if (numberOfItems == 0)
 			{
@@ -368,35 +368,19 @@ bool ModuleNodeCluster::updateGUI()
 					ImGui::Text("Create MultiCastPetitioner?");
 					ImGui::Separator();
 					ImGui::Text("Node %d", selectedNode);
-					ImGui::Columns(2);
 
 					ImGui::Text(" - Petition: %d", requestedItem);
-					ImGui::NextColumn();
 
-					if (ImGui::InputInt("Quantity##PetitionQuantity", &petition_quantity, 1, 100, ImGuiInputTextFlags_::ImGuiInputTextFlags_EnterReturnsTrue))
-					{
-						if (petition_quantity > MAX_ITEM_VALUE)
-							petition_quantity = MAX_ITEM_VALUE;
-						if (petition_quantity < MIN_ITEM_VALUE)
-							petition_quantity = MIN_ITEM_VALUE;
-					}
-					ImGui::NextColumn();
+				
 
 					ImGui::Combo("Contribution", &comboItem, (const char **)&comboCStrings[0], (int)comboCStrings.size());
-					ImGui::NextColumn();
 
-					if (ImGui::InputInt("Quantity##ContributionQuantity", &contribution_quantity, 1, 100, ImGuiInputTextFlags_::ImGuiInputTextFlags_EnterReturnsTrue))
-					{
-						if (contribution_quantity > MAX_ITEM_VALUE)
-							contribution_quantity = MAX_ITEM_VALUE;
-						if (contribution_quantity < MIN_ITEM_VALUE)
-							contribution_quantity = MIN_ITEM_VALUE;
-					}
-					ImGui::Columns();
-					if (ImGui::Button("Spawn MCP") /*&& ValidateSpawn(requestedItem,petition_quantity,itemIds[comboItem],contribution_quantity)*/) {
+					ShowDealProposition(requestedItem, itemIds[comboItem], petition_quantity, contribution_quantity);
+				
+					if (ImGui::Button("Spawn MCP") && ValidateSpawn(_nodes[selectedNode]->itemList().numItemsWithId(comboItem), contribution_quantity)) {
 						int contributedItem = itemIds[comboItem];
-						//spawnMCP(requestedItem,petition_quantity,contributedItem,contribution_quantity)
-						spawnMCP(selectedNode, requestedItem, contributedItem);
+						spawnMCP(selectedNode, requestedItem, petition_quantity, contributedItem, contribution_quantity);
+						//spawnMCP(selectedNode, requestedItem, contributedItem);
 						ImGui::CloseCurrentPopup();
 					}
 				}
@@ -620,6 +604,18 @@ void ModuleNodeCluster::stopSystem()
 {
 }
 
+void ModuleNodeCluster::spawnMCP(int nodeId, int requestedItemId, int requested_quantity, int contributedItemId, int contributed_quantity)
+{
+	dLog << "Spawn MCP - node " << nodeId << " - req. " << requestedItemId << " - contrib. " << contributedItemId;
+	if (nodeId >= 0 && nodeId < (int)_nodes.size()) {
+		NodePtr node = _nodes[nodeId];
+		App->agentContainer->createMCP(node.get(), requestedItemId, contributedItemId, 0);
+	}
+	else {
+		wLog << "Could not find node with ID " << nodeId;
+	}
+}
+
 void ModuleNodeCluster::spawnMCP(int nodeId, int requestedItemId, int contributedItemId)
 {
 	dLog << "Spawn MCP - node " << nodeId << " - req. " << requestedItemId << " - contrib. " << contributedItemId;
@@ -642,4 +638,41 @@ void ModuleNodeCluster::spawnMCC(int nodeId, int contributedItemId, int constrai
 	else {
 		wLog << "Could not find node with ID " << nodeId;
 	}
+}
+
+bool ModuleNodeCluster::ValidateSpawn(int actual_quantity, int needed_quantity)
+{
+	return actual_quantity > needed_quantity;
+}
+
+bool ModuleNodeCluster::ShowDealProposition(int requestedItem, int contributionItem, int& requested_quantity, int& contribution_quantity )
+{
+	ItemType requested_type = static_cast<ItemType>(GetItemType(requestedItem));
+	ItemType contribution_type = static_cast<ItemType>(GetItemType(contributionItem));
+
+	if (requested_type == ItemType::NO_TYPE || contribution_type == ItemType::NO_TYPE)
+		return false;
+
+	requested_quantity = 1;
+	contribution_quantity = 1;
+	if (requested_type == contribution_type)
+		return true;
+
+	if(requested_type > contribution_type)
+	{
+		requested_quantity = 1;
+		for (int i = contribution_type; i < requested_type; i++)
+		{
+			contribution_quantity *= 2;
+		}
+	}
+	else 
+	{
+		contribution_quantity = 1;
+		for (int i = requested_type; i < contribution_type; i++)
+		{
+			requested_quantity *= 2;
+		}
+	}
+	return true;
 }

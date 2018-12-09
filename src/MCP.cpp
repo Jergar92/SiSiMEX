@@ -26,6 +26,18 @@ MCP::MCP(Node *node, uint16_t requestedItemID, uint16_t contributedItemID, unsig
 	setState(ST_INIT);
 }
 
+MCP::MCP(Node * node, uint16_t requestedItemID, uint16_t requested_quantity, uint16_t contributedItemID, uint16_t contributed_quantity, unsigned int searchDepth):
+Agent(node),
+_requestedItemId(requestedItemID),
+_requested_quantity(requested_quantity),
+_contributedItemId(contributedItemID),
+_contributed_quantity(contributed_quantity),
+_searchDepth(searchDepth)
+{
+	final_agreement = false;
+	setState(ST_INIT);
+}
+
 MCP::~MCP()
 {
 }

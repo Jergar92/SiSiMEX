@@ -28,6 +28,13 @@ MCPPtr ModuleAgentContainer::createMCP(Node *node, uint16_t requestedItemId, uin
 	return mcp;
 }
 
+MCPPtr ModuleAgentContainer::createMCP(Node * node, uint16_t requestedItemId, uint16_t requested_quantity, uint16_t contributedItemId, uint16_t contributed_quantity, unsigned int searchDepth)
+{
+	MCPPtr mcp(new MCP(node, requestedItemId, requested_quantity, contributedItemId, contributed_quantity, searchDepth));
+	addAgent(mcp);
+	return mcp;
+}
+
 UCCPtr ModuleAgentContainer::createUCC(Node *node, uint16_t contributedItemId, uint16_t constraintItemId)
 {
 	UCCPtr ucc(new UCC(node, contributedItemId, constraintItemId));
