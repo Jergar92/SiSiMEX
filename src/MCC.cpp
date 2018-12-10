@@ -29,7 +29,7 @@ MCC::MCC(Node *node, uint16_t contributedItemId, uint16_t constraintItemId) :
 MCC::MCC(Node * node, uint16_t contributedItemId, uint16_t contributed_quantity, uint16_t constraintItemId):
 Agent(node),
 _contributedItemId(contributedItemId),
-_contributed_quantity(contributed_quantity),
+_total_contributed_quantity(contributed_quantity),
 _constraintItemId(constraintItemId)
 {
 	setState(ST_INIT);
@@ -66,11 +66,14 @@ void MCC::update()
 		{
 			if (_ucc->final_agrement)
 			{
+				_constrain_quantity = _ucc->_constraint_quantity;
 				final_agreement = true;
 				setState(ST_NEGOTIATION_FINISH);
 			}
 			else			
 				setState(ST_IDLE);
+
+			
 
 			destroyChildUCC();
 
@@ -114,29 +117,30 @@ void MCC::OnPacketReceived(TCPSocketPtr socket, const PacketHeader &packetHeader
 		}
 		break;
 	case PacketType::MCPNegotiateMCCRequest:
-		if (isIdling())
+		PacketMCPNegotiateMCCRequest pkt_request;
+		pkt_request.Read(stream);
+		if (isIdling()&& pkt_request.quantity_request <= _total_contributed_quantity)
 		{
+			_contributed_quantity = pkt_request.quantity_request;
 			final_agreement = false;
-
 			setState(ST_NEGOTIATING);
-			createChildUCC();
+			createChildUCC();	
 			
 			PacketHeader pkt_header;
+			OutputMemoryStream packet;
+			PacketMCCNegotiateMCPAnswer pkt_answer;
+
 			pkt_header.packetType = PacketType::MCCNegotiateMCPAnswer;
 			pkt_header.srcAgentId = id();
 			pkt_header.dstAgentId = packetHeader.srcAgentId;
-			OutputMemoryStream packet;
-			PacketMCCNegotiateMCPAnswer pkt_answer;
-			AgentLocation ucclocation;
 
+			AgentLocation ucclocation;
 			ucclocation.hostIP = socket->RemoteAddress().GetIPString();
 			ucclocation.agentId = _ucc->id();
 			ucclocation.hostPort = LISTEN_PORT_AGENTS;
-
-			pkt_answer.accepted = true;
-			
+			pkt_answer.accepted = true;			
 			pkt_answer.ucc_location = ucclocation;
-			
+
 			pkt_header.Write(packet);
 			pkt_answer.Write(packet);
 		

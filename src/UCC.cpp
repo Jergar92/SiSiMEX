@@ -19,7 +19,7 @@ UCC::UCC(Node *node, uint16_t contributedItemId, uint16_t constraintItemId) :
 	// TODO: Save input parameters
 }
 UCC::UCC(Node * node, uint16_t contributedItemId, uint16_t contributed_quantity, uint16_t constraintItemId):
-Agent(node), _contributedItemId(contributedItemId), _constraint_quantity(contributed_quantity), _constraintItemId(constraintItemId)
+Agent(node), _contributedItemId(contributedItemId), _contributed_quantity(contributed_quantity), _constraintItemId(constraintItemId)
 {
 	// TODO: Save input parameters
 }
@@ -44,21 +44,20 @@ void UCC::OnPacketReceived(TCPSocketPtr socket, const PacketHeader &packetHeader
 		{
 			PacketUCPNegotiateUCCItemRequest item_request;
 			item_request.Read(stream);
-			if (item_request.itemId == _contributedItemId)
-			{
-				setState(UCC_ST_WAITING_CONSTRAIN);
 
-				OutputMemoryStream stream;
-				PacketHeader packet;
-				packet.packetType = PacketType::UCCNegotiateUCPConstrainRequest;
-				packet.srcAgentId = id();
-				packet.dstAgentId = packetHeader.srcAgentId;
-				PacketUCCNegotiateUCPConstrainRequest contrain_request;
-				contrain_request.itemId = _constraintItemId;
-				packet.Write(stream);
-				contrain_request.Write(stream);
-				socket->SendPacket(stream.GetBufferPtr(), stream.GetSize());
-			}
+			setState(UCC_ST_WAITING_CONSTRAIN);
+
+			OutputMemoryStream stream;
+			PacketHeader packet;
+			packet.packetType = PacketType::UCCNegotiateUCPConstrainRequest;
+			packet.srcAgentId = id();
+			packet.dstAgentId = packetHeader.srcAgentId;
+			PacketUCCNegotiateUCPConstrainRequest contrain_request;
+			contrain_request.itemId = _constraintItemId;
+			packet.Write(stream);
+			contrain_request.Write(stream);
+			socket->SendPacket(stream.GetBufferPtr(), stream.GetSize());
+
 		}
 		else
 		{
@@ -75,7 +74,7 @@ void UCC::OnPacketReceived(TCPSocketPtr socket, const PacketHeader &packetHeader
 			PacketUCPNegotiateUCCConstrainResult constrain_results;
 			constrain_results.Read(stream);
 			final_agrement = constrain_results.agrement;
-
+			_constraint_quantity = constrain_results.quantity;
 			PacketUCCNegotiateUCPACK packet_ack;
 			packet_ack.agrement = final_agrement;
 			OutputMemoryStream stream;

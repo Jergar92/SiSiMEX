@@ -31,12 +31,29 @@ void ItemList::addItem(ItemId itemId)
 	recomputeMissingItems();
 }
 
+void ItemList::addItem(ItemId itemId, int quantity)
+{
+	assert(itemId < MAX_ITEMS && "ItemsList::addItem() - itemId out of bounds.");
+	items[itemId]+= quantity;
+	numberOfItems+= quantity;
+	recomputeMissingItems();
+}
+
 void ItemList::removeItem(ItemId itemId)
 {
 	assert(itemId < MAX_ITEMS && "ItemsList::removeItem() - itemId out of bounds.");
 	assert(items[itemId] > 0 && "ItemsList::removeItem() - the list does not contain this item.");
 	items[itemId]--;
 	numberOfItems--;
+	recomputeMissingItems();
+}
+
+void ItemList::removeItem(ItemId itemId, int quantity)
+{
+	assert(itemId < MAX_ITEMS && "ItemsList::removeItem() - itemId out of bounds.");
+	assert(items[itemId] > 0 && "ItemsList::removeItem() - the list does not contain this item.");
+	items[itemId] -= quantity;
+	numberOfItems -= quantity;
 	recomputeMissingItems();
 }
 

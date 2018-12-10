@@ -376,10 +376,10 @@ bool ModuleNodeCluster::updateGUI()
 					ImGui::Combo("Contribution", &comboItem, (const char **)&comboCStrings[0], (int)comboCStrings.size());
 
 					ShowDealProposition(requestedItem, itemIds[comboItem], petition_quantity, contribution_quantity);
-				
-					if (ImGui::Button("Spawn MCP") && ValidateSpawn(_nodes[selectedNode]->itemList().numItemsWithId(comboItem), contribution_quantity)) {
+					int actual_amount_contribution = _nodes[selectedNode]->itemList().numItemsWithId(comboItem);
+					if (ImGui::Button("Spawn MCP") && ValidateSpawn(actual_amount_contribution, contribution_quantity)) {
 						int contributedItem = itemIds[comboItem];
-						spawnMCP(selectedNode, requestedItem, petition_quantity, contributedItem, contribution_quantity);
+						spawnMCP(selectedNode, requestedItem, petition_quantity, contributedItem, contribution_quantity, actual_amount_contribution);
 						//spawnMCP(selectedNode, requestedItem, contributedItem);
 						ImGui::CloseCurrentPopup();
 					}
@@ -494,7 +494,7 @@ bool ModuleNodeCluster::startSystem()
 				itemId = rand() % MAX_ITEMS;
 			}
 			_nodes[i]->itemList().removeItem(itemId);
-			_nodes[(i + 1) % MAX_NODES]->itemList().addItem(itemId);
+			_nodes[(i + 1) % MAX_NODES]->itemList().addItem(itemId, rand() % 5);
 		}
 	}
 #else
@@ -541,8 +541,8 @@ void ModuleNodeCluster::runSystem()
 			if (mcc->negotiationAgreement())
 			{
 				Node *node = mcc->node();
-				node->itemList().removeItem(mcc->contributedItemId());
-				node->itemList().addItem(mcc->constraintItemId());
+				node->itemList().removeItem(mcc->contributedItemId(),mcc->contributed_quantity());
+				node->itemList().addItem(mcc->constraintItemId(),mcc->constrain_quantity());
 				iLog << "MCC exchange at Node " << node->id() << ":"
 					<< " -" << mcc->contributedItemId()
 					<< " +" << mcc->constraintItemId();
@@ -564,8 +564,8 @@ void ModuleNodeCluster::runSystem()
 
 			if (mcp->negotiationAgreement())
 			{
-				node->itemList().addItem(mcp->requestedItemId());
-				node->itemList().removeItem(mcp->contributedItemId());
+				node->itemList().addItem(mcp->requestedItemId(),mcp->requested_quantity());
+				node->itemList().removeItem(mcp->contributedItemId(),mcp->contributed_quantity());
 				iLog << "MCP exchange at Node " << node->id() << ":"
 					<< " -" << mcp->contributedItemId()
 					<< " +" << mcp->requestedItemId();
@@ -604,12 +604,12 @@ void ModuleNodeCluster::stopSystem()
 {
 }
 
-void ModuleNodeCluster::spawnMCP(int nodeId, int requestedItemId, int requested_quantity, int contributedItemId, int contributed_quantity)
+void ModuleNodeCluster::spawnMCP(int nodeId, int requestedItemId, int requested_quantity, int contributedItemId, int contributed_quantity, int actual_amount_contribution)
 {
 	dLog << "Spawn MCP - node " << nodeId << " - req. " << requestedItemId << " - contrib. " << contributedItemId;
 	if (nodeId >= 0 && nodeId < (int)_nodes.size()) {
 		NodePtr node = _nodes[nodeId];
-		App->agentContainer->createMCP(node.get(), requestedItemId, requested_quantity, contributedItemId, contributed_quantity, 0);
+		App->agentContainer->createMCP(node.get(), requestedItemId, requested_quantity, contributedItemId, contributed_quantity, actual_amount_contribution, 0);
 	}
 	else {
 		wLog << "Could not find node with ID " << nodeId;
@@ -654,37 +654,7 @@ void ModuleNodeCluster::spawnMCC(int nodeId, int contributedItemId, int contribu
 
 bool ModuleNodeCluster::ValidateSpawn(int actual_quantity, int needed_quantity)
 {
-	return actual_quantity > needed_quantity;
+	return actual_quantity >= needed_quantity;
 }
 
-bool ModuleNodeCluster::ShowDealProposition(int requestedItem, int contributionItem, int& requested_quantity, int& contribution_quantity )
-{
-	ItemType requested_type = static_cast<ItemType>(GetItemType(requestedItem));
-	ItemType contribution_type = static_cast<ItemType>(GetItemType(contributionItem));
 
-	if (requested_type == ItemType::NO_TYPE || contribution_type == ItemType::NO_TYPE)
-		return false;
-
-	requested_quantity = 1;
-	contribution_quantity = 1;
-	if (requested_type == contribution_type)
-		return true;
-
-	if(requested_type > contribution_type)
-	{
-		requested_quantity = 1;
-		for (int i = contribution_type; i < requested_type; i++)
-		{
-			contribution_quantity *= 2;
-		}
-	}
-	else 
-	{
-		contribution_quantity = 1;
-		for (int i = requested_type; i < contribution_type; i++)
-		{
-			requested_quantity *= 2;
-		}
-	}
-	return true;
-}

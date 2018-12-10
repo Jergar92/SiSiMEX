@@ -206,6 +206,7 @@ void ModuleYellowPages::OnPacketReceived(TCPSocketPtr socket, InputMemoryStream 
 		auto itemId = inPacketData.itemId;
 		auto &mccAddressList = _mccByItem[itemId];
 		for (auto &mccAddress : mccAddressList) {
+			
 			outPacketData.mccAddresses.push_back(mccAddress);
 		}
 

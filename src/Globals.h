@@ -68,6 +68,40 @@ static const unsigned int GetItemType(unsigned int i)
 	check += MAX_LEGEND_ITEMS;
 	if (i<check)
 		return ItemType::LEGEND;
+
+	return ItemType::NO_TYPE;
+}
+
+static const bool ShowDealProposition(int requestedItem, int contributionItem, int& requested_quantity, int& contribution_quantity)
+{
+	ItemType requested_type = static_cast<ItemType>(GetItemType(requestedItem));
+	ItemType contribution_type = static_cast<ItemType>(GetItemType(contributionItem));
+
+	if (requested_type == ItemType::NO_TYPE || contribution_type == ItemType::NO_TYPE)
+		return false;
+
+	requested_quantity = 1;
+	contribution_quantity = 1;
+	if (requested_type == contribution_type)
+		return true;
+
+	if (requested_type > contribution_type)
+	{
+		requested_quantity = 1;
+		for (int i = contribution_type; i < requested_type; i++)
+		{
+			contribution_quantity *= 2;
+		}
+	}
+	else
+	{
+		contribution_quantity = 1;
+		for (int i = requested_type; i < contribution_type; i++)
+		{
+			requested_quantity *= 2;
+		}
+	}
+	return true;
 }
 #else
 

@@ -12,7 +12,7 @@ public:
 
 	// Constructor and destructor
 	MCP(Node *node, uint16_t requestedItemID, uint16_t contributedItemID, unsigned int searchDepth);
-	MCP(Node *node, uint16_t requestedItemID, uint16_t requested_quantity, uint16_t contributedItemID, uint16_t contributed_quantity, unsigned int searchDepth);
+	MCP(Node *node, uint16_t requestedItemID, uint16_t requested_quantity, uint16_t contributedItemID, uint16_t contributed_quantity, uint16_t actual_amount_contribution, unsigned int searchDepth);
 
 	~MCP();
 
@@ -25,6 +25,8 @@ public:
 	// Getters
 	uint16_t requestedItemId() const { return _requestedItemId; }
 	uint16_t contributedItemId() const { return _contributedItemId; }
+	uint16_t requested_quantity() const { return _requested_quantity; }
+	uint16_t contributed_quantity() const { return _contributed_quantity; }
 
 	// Whether or not the negotiation finished
 	bool negotiationFinished() const;
@@ -47,8 +49,11 @@ private:
 	uint16_t _requestedItemId;
 	uint16_t _contributedItemId;
 
-	uint16_t _requested_quantity=1;
-	uint16_t _contributed_quantity=1;
+	uint16_t _requested_quantity = 1;
+	uint16_t _contributed_quantity = 1;
+	uint16_t _actual_amount_contribution = 1;
+
+	
 	bool final_agreement = false;
 	int _mccRegisterIndex; /**< Iterator through _mccRegisters. */
 	std::vector<AgentLocation> _mccRegisters; /**< MCCs returned by the YP. */

@@ -119,11 +119,15 @@ public:
 // MCP <-> MCC
 class PacketMCPNegotiateMCCRequest {
 public:
+	uint16_t quantity_request; // Which item has to be registered?
 
 
 	void Read(InputMemoryStream &stream) {
+		stream.Read(quantity_request);
+
 	}
 	void Write(OutputMemoryStream &stream) {
+		stream.Write(quantity_request);
 	}
 };
 
@@ -152,12 +156,17 @@ using PacketUCCNegotiateUCPConstrainRequest = PacketRegisterMCC;
 class PacketUCPNegotiateUCCConstrainResult {
 public:
 	bool agrement; // Which item has to be registered?
+	uint16_t quantity; // Which item has to be registered?
 
 	void Read(InputMemoryStream &stream) {
 		stream.Read(agrement);
+		stream.Read(quantity);
+
 	}
 	void Write(OutputMemoryStream &stream) {
 		stream.Write(agrement);
+		stream.Write(quantity);
+
 	}
 };
 using PacketUCCNegotiateUCPACK = PacketUCPNegotiateUCCConstrainResult;

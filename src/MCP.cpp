@@ -26,12 +26,13 @@ MCP::MCP(Node *node, uint16_t requestedItemID, uint16_t contributedItemID, unsig
 	setState(ST_INIT);
 }
 
-MCP::MCP(Node * node, uint16_t requestedItemID, uint16_t requested_quantity, uint16_t contributedItemID, uint16_t contributed_quantity, unsigned int searchDepth):
+MCP::MCP(Node * node, uint16_t requestedItemID, uint16_t requested_quantity, uint16_t contributedItemID, uint16_t contributed_quantity, uint16_t actual_amount_contribution, unsigned int searchDepth):
 Agent(node),
 _requestedItemId(requestedItemID),
 _requested_quantity(requested_quantity),
 _contributedItemId(contributedItemID),
 _contributed_quantity(contributed_quantity),
+_actual_amount_contribution(actual_amount_contribution),
 _searchDepth(searchDepth)
 {
 	final_agreement = false;
@@ -56,12 +57,14 @@ void MCP::update()
 		if (_mccRegisters.empty() || _mccRegisters.size() <= _mccRegisterIndex)
 		{
 			setState(ST_NEGOTIATION_FINISHED);
+			wLog << "_searchDepth =" << _searchDepth;
 			destroyChildUCP();
 			break;
 		}
 		OutputMemoryStream packet;
 		PacketHeader pkt_header;
 		PacketMCPNegotiateMCCRequest pkt_request;
+		pkt_request.quantity_request = _requested_quantity;
 		AgentLocation agent = _mccRegisters[_mccRegisterIndex++];
 		pkt_header.packetType = PacketType::MCPNegotiateMCCRequest;
 		pkt_header.srcAgentId = id();
@@ -210,7 +213,7 @@ bool MCP::queryMCCsForItem(int itemId)
 void MCP::createChildUCP(const AgentLocation &ucc_location)
 {
 	_ucp.reset();
-	_ucp = App->agentContainer->createUCP(node(), _requestedItemId, _contributedItemId, ucc_location, _searchDepth);
+	_ucp = App->agentContainer->createUCP(node(), _requestedItemId,_requested_quantity ,_contributedItemId,_contributed_quantity, _actual_amount_contribution, ucc_location, _searchDepth);
 	
 }
 

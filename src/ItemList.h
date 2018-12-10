@@ -23,7 +23,10 @@ public:
 
 	// Methods to add and remove items to/from the list
 	void addItem(ItemId itemId);
+	void addItem(ItemId itemId,int quantity);
+
 	void removeItem(ItemId itemId);
+	void removeItem(ItemId itemId, int quantity);
 
 	// It returns the number of items with the given Id
 	unsigned int numItemsWithId(ItemId itemId);

@@ -20,6 +20,7 @@ public:
 	bool IsFinish();
 	uint16_t _contributedItemId; /**< The contributed item. */
 	uint16_t _constraintItemId; /**< The constraint item. */
+	uint16_t _contributed_quantity; /**< The constraint item. */
 	uint16_t _constraint_quantity; /**< The constraint item. */
 
 	bool final_agrement = false;

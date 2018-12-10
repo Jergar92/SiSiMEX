@@ -24,8 +24,8 @@ UCP::UCP(Node *node, uint16_t requestedItemId, uint16_t contributedItemId, const
 	// TODO: Save input parameters
 }
 
-UCP::UCP(Node * node, uint16_t requestedItemId, uint16_t requested_quantity, uint16_t contributedItemId, uint16_t contributed_quantity, const AgentLocation & uccLocation, unsigned int searchDepth):
-	Agent(node), _requestedItemId(requestedItemId), _requested_quantity(requested_quantity), _contributedItemId(contributedItemId), _contributed_quantity(contributed_quantity), ucc_location(uccLocation), searchDepth(searchDepth)
+UCP::UCP(Node * node, uint16_t requestedItemId, uint16_t requested_quantity, uint16_t contributedItemId, uint16_t contributed_quantity, uint16_t actual_amount_contribution, const AgentLocation & uccLocation, unsigned int searchDepth):
+	Agent(node), _requestedItemId(requestedItemId), _requested_quantity(requested_quantity), _contributedItemId(contributedItemId), _contributed_quantity(contributed_quantity), _actual_contributed_quantity(actual_amount_contribution), ucc_location(uccLocation), searchDepth(searchDepth)
 {
 	setState(UCP_ST_INIT);
 	// TODO: Save input parameters
@@ -70,7 +70,7 @@ void UCP::update()
 				packet.dstAgentId = ucc_location.agentId;
 				PacketUCPNegotiateUCCConstrainResult constrain_result;
 				constrain_result.agrement = _mcp->negotiationAgreement();
-
+				constrain_result.quantity = _mcp->contributed_quantity();
 				OutputMemoryStream stream;
 				packet.Write(stream);
 				constrain_result.Write(stream);
@@ -121,7 +121,7 @@ void UCP::OnPacketReceived(TCPSocketPtr socket, const PacketHeader &packetHeader
 				setState(UCP_ST_SENDING_CONSTRAIN);
 
 				constrain_result.agrement = true;
-
+				constrain_result.quantity = _contributed_quantity;
 				packet.Write(stream);
 				constrain_result.Write(stream);
 
@@ -131,14 +131,30 @@ void UCP::OnPacketReceived(TCPSocketPtr socket, const PacketHeader &packetHeader
 			else if(searchDepth < MAX_DEPTH)
 			{
 				setState(UCP_ST_RESOLVING_CONSTRAIN);
+				int petition_quantity = 0;
+				int contribution_quantity = 0;
 
-				createChildMCP(item_request.itemId);
+				bool check = ShowDealProposition(item_request.itemId, _contributedItemId, petition_quantity, contribution_quantity);
+				if (!check && _actual_contributed_quantity < contribution_quantity)
+				{
+					setState(UCP_ST_SENDING_CONSTRAIN);
+					constrain_result.agrement = false;
+					constrain_result.quantity = _contributed_quantity;
+					packet.Write(stream);
+					constrain_result.Write(stream);
+				}
+				else
+				{
+					createChildMCP(item_request.itemId, petition_quantity);
+
+				}
 			}		
 			else
 			{
 				setState(UCP_ST_SENDING_CONSTRAIN);
 
 				constrain_result.agrement = false;
+				constrain_result.quantity = _contributed_quantity;
 
 				packet.Write(stream);
 				constrain_result.Write(stream);
@@ -180,12 +196,24 @@ bool UCP::IsFinish()
 	return state()==UCP_ST_FINISHED;
 }
 
+void UCP::createChildMCP(uint16_t request, uint16_t requested_quantity)
+{
+	destroyChildMCP();
+	_mcp.reset();
+	_mcp = App->agentContainer->createMCP(node(), request, requested_quantity, _contributedItemId,_contributed_quantity, _actual_contributed_quantity, searchDepth + 1);
+
+}
+
 void UCP::createChildMCP(uint16_t request)
 {
 	destroyChildMCP();
 	_mcp.reset();
 	_mcp = App->agentContainer->createMCP(node(), request, _contributedItemId, searchDepth+1);
 
+}
+
+void UCP::EndAgreement()
+{
 }
 
 void UCP::destroyChildMCP()

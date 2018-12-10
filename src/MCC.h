@@ -27,6 +27,8 @@ public:
 	uint16_t contributedItemId() const { return _contributedItemId; }
 	uint16_t constraintItemId() const { return _constraintItemId; }
 
+	uint16_t contributed_quantity() const { return _contributed_quantity; }
+	uint16_t constrain_quantity() const { return _constrain_quantity; }
 	// Whether or not the negotiation finished
 	bool negotiationFinished() const;
 
@@ -44,9 +46,12 @@ private:
 	void destroyChildUCC();
 
 	uint16_t _contributedItemId; /**< The contributed item. */
+	uint16_t _total_contributed_quantity; /**< The Total contributed quantity. */
 	uint16_t _contributed_quantity; /**< The contributed quantity. */
 
 	uint16_t _constraintItemId; /**< The constraint item. */
+	uint16_t _constrain_quantity; /**< The constrain quantity. */
+
 	bool participating = false;
 	bool final_agreement = false;
 	UCCPtr _ucc; /**< Child UCC. */
