@@ -77,9 +77,9 @@ static const bool ShowDealProposition(int requestedItem, int contributionItem, i
 	ItemType requested_type = static_cast<ItemType>(GetItemType(requestedItem));
 	ItemType contribution_type = static_cast<ItemType>(GetItemType(contributionItem));
 
+		
 	if (requested_type == ItemType::NO_TYPE || contribution_type == ItemType::NO_TYPE)
 		return false;
-
 	requested_quantity = 1;
 	contribution_quantity = 1;
 	if (requested_type == contribution_type)

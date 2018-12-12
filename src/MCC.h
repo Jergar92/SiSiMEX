@@ -40,7 +40,7 @@ private:
 	bool registerIntoYellowPages();
 	
 	void unregisterFromYellowPages();
-
+	bool validMCC(uint16_t quantity_request);
 	void createChildUCC();
 
 	void destroyChildUCC();

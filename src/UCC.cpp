@@ -44,7 +44,7 @@ void UCC::OnPacketReceived(TCPSocketPtr socket, const PacketHeader &packetHeader
 		{
 			PacketUCPNegotiateUCCItemRequest item_request;
 			item_request.Read(stream);
-
+			
 			setState(UCC_ST_WAITING_CONSTRAIN);
 
 			OutputMemoryStream stream;
@@ -74,7 +74,9 @@ void UCC::OnPacketReceived(TCPSocketPtr socket, const PacketHeader &packetHeader
 			PacketUCPNegotiateUCCConstrainResult constrain_results;
 			constrain_results.Read(stream);
 			final_agrement = constrain_results.agrement;
-			_constraint_quantity = constrain_results.quantity;
+			_contributed_quantity = constrain_results.constrain_quantity;
+			_constraint_quantity = constrain_results.contributed_quantity;
+
 			PacketUCCNegotiateUCPACK packet_ack;
 			packet_ack.agrement = final_agrement;
 			OutputMemoryStream stream;

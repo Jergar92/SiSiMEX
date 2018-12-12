@@ -5,6 +5,7 @@
 #include "Node.h"
 #include "MCC.h"
 #include "MCP.h"
+#include <map>
 
 class ModuleNodeCluster : public Module, public TCPNetworkManagerDelegate
 {
@@ -24,6 +25,10 @@ public:
 
 	bool stop() override;
 
+	bool validMCC(uint16_t index, uint16_t agendtTD);
+
+	void AddNegotation(uint16_t agendtTD, uint16_t requested_item);
+	void RemoveNegotiation(uint16_t agendtTD, uint16_t requested_item);
 
 	// TCPNetworkManagerDelegate virtual methods
 
@@ -34,6 +39,9 @@ public:
 	void OnDisconnected(TCPSocketPtr socket) override;
 
 private:
+	void SpawnAgentMCC();
+
+	void ClearAgent();
 
 	bool startSystem();
 
@@ -41,7 +49,11 @@ private:
 
 	void stopSystem();
 
+	void CleanNegotiation();
 
+	void ShowValueExchange(uint16_t contribution, uint16_t request, uint16_t contribution_quantity, uint16_t request_quantity);
+
+	void ShowBox(uint16_t rarity_value);
 	void spawnMCP(int nodeId, int requestedItemId,int requested_quantity, int contributedItemId,int contributed_quantity,int actual_amount_contribution);
 	void spawnMCP(int nodeId, int requestedItemId, int contributedItemId);
 
@@ -51,6 +63,7 @@ private:
 	bool ValidateSpawn(int requestedItem, int petition_quantity);
 
 	std::vector<NodePtr> _nodes; /**< Array of nodes spawn in this host. */
+	std::map<uint16_t, std::vector<uint16_t>> current_negotiation;
 
 	int state = 0; /**< State machine. */
 };

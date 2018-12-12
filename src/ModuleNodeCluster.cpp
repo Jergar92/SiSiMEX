@@ -6,6 +6,7 @@
 #include "Packets.h"
 #include "imgui/imgui.h"
 #include <sstream>
+#include <algorithm>
 #define MAX_ITEM_VALUE 8
 #define MIN_ITEM_VALUE 1
 enum State {
@@ -85,61 +86,15 @@ bool ModuleNodeCluster::updateGUI()
 
 		if (ImGui::Button("Create random MCCs"))
 		{
-			for (NodePtr node : _nodes)
-			{
-				for (ItemId contributedItem = 0; contributedItem < MAX_ITEMS; ++contributedItem)
-				{
-					if (node->itemList().numItemsWithId(contributedItem) > 1)
-					{
-						unsigned int numItemsToContribute = node->itemList().numItemsWithId(contributedItem) -  1;
-				
-						
-						for (ItemId constraintItem = 0; constraintItem < MAX_ITEMS; ++constraintItem)
-						{
-							if (node->itemList().numItemsWithId(constraintItem) == 0)
-							{												
-								int num_to_contribute = numItemsToContribute;
-									for (unsigned int i = 0; i < numItemsToContribute; i+=MAX_ITEM_VALUE)
-									{
-										int send_to_contribute=0;
-										if(num_to_contribute >= MAX_ITEM_VALUE)
-										{
-											send_to_contribute = MAX_ITEM_VALUE;
-											num_to_contribute -= MAX_ITEM_VALUE;
-										}
-										else
-										{
-											send_to_contribute = num_to_contribute;
-										}
-											
-										spawnMCC(node->id(), contributedItem,num_to_contribute, constraintItem);
-									}
-							}
-						}
-						
-						/*
-						for (ItemId constraintItem = 0; constraintItem < MAX_ITEMS; ++constraintItem)
-						{
-							if (node->itemList().numItemsWithId(constraintItem) == 0)
-							{
-								for (unsigned int i = 0; i < numItemsToContribute; ++i)
-								{
-									spawnMCC(node->id(), contributedItem, constraintItem);
-								}
-							}
-						}
-						*/
-					}
-				}
-			}
+			ClearAgent();
+
+			SpawnAgentMCC();
 		}
 
 		if (ImGui::Button("Clear all agents"))
 		{
-			for (AgentPtr agent : App->agentContainer->allAgents())
-			{
-				agent->stop();
-			}
+			ClearAgent();
+		
 		}
 
 		ImGui::Separator();
@@ -376,9 +331,14 @@ bool ModuleNodeCluster::updateGUI()
 					ImGui::Combo("Contribution", &comboItem, (const char **)&comboCStrings[0], (int)comboCStrings.size());
 
 					ShowDealProposition(requestedItem, itemIds[comboItem], petition_quantity, contribution_quantity);
-					int actual_amount_contribution = _nodes[selectedNode]->itemList().numItemsWithId(comboItem);
+					int actual_amount_contribution = _nodes[selectedNode]->itemList().numItemsWithId(itemIds[comboItem]);
+					ShowValueExchange(itemIds[comboItem], requestedItem, contribution_quantity, petition_quantity);
+					
 					if (ImGui::Button("Spawn MCP") && ValidateSpawn(actual_amount_contribution, contribution_quantity)) {
+						ClearAgent();
+						SpawnAgentMCC();
 						int contributedItem = itemIds[comboItem];
+						CleanNegotiation();
 						spawnMCP(selectedNode, requestedItem, petition_quantity, contributedItem, contribution_quantity, actual_amount_contribution);
 						//spawnMCP(selectedNode, requestedItem, contributedItem);
 						ImGui::CloseCurrentPopup();
@@ -407,6 +367,29 @@ bool ModuleNodeCluster::stop()
 
 	return true;
 }
+
+bool ModuleNodeCluster::validMCC(uint16_t agendtTD, uint16_t requested_item)
+{
+	if (!current_negotiation[agendtTD].empty())
+	{
+		if (std::find(current_negotiation[agendtTD].begin(), current_negotiation[agendtTD].end(), requested_item) != current_negotiation[agendtTD].end())
+		{
+			return false;
+		}
+	}
+	return true;
+}
+
+void ModuleNodeCluster::AddNegotation(uint16_t agendtTD, uint16_t requested_item)
+{
+	current_negotiation[agendtTD].push_back(requested_item);
+}
+
+void ModuleNodeCluster::RemoveNegotiation(uint16_t agendtTD, uint16_t requested_item)
+{
+	current_negotiation[agendtTD].erase(std::remove(current_negotiation[agendtTD].begin(), current_negotiation[agendtTD].end(), requested_item), current_negotiation[agendtTD].end());
+}
+
 
 bool ModuleNodeCluster::cleanUp()
 {
@@ -440,6 +423,65 @@ void ModuleNodeCluster::OnPacketReceived(TCPSocketPtr socket, InputMemoryStream 
 void ModuleNodeCluster::OnDisconnected(TCPSocketPtr socket)
 {
 	// Nothing to do
+}
+
+void ModuleNodeCluster::SpawnAgentMCC()
+{
+	for (NodePtr node : _nodes)
+	{
+		for (ItemId contributedItem = 0; contributedItem < MAX_ITEMS; ++contributedItem)
+		{
+			if (node->itemList().numItemsWithId(contributedItem) > 1)
+			{
+				unsigned int numItemsToContribute = node->itemList().numItemsWithId(contributedItem);
+
+
+				for (ItemId constraintItem = 0; constraintItem < MAX_ITEMS; ++constraintItem)
+				{
+					if (node->itemList().numItemsWithId(constraintItem) == 0)
+					{
+						int num_to_contribute = numItemsToContribute;
+						for (unsigned int i = 0; i < numItemsToContribute; i += MAX_ITEM_VALUE)
+						{
+							int send_to_contribute = 0;
+							if (num_to_contribute >= MAX_ITEM_VALUE)
+							{
+								send_to_contribute = MAX_ITEM_VALUE;
+								num_to_contribute -= MAX_ITEM_VALUE;
+							}
+							else
+							{
+								send_to_contribute = num_to_contribute;
+							}
+
+							spawnMCC(node->id(), contributedItem, num_to_contribute, constraintItem);
+						}
+					}
+				}
+
+				/*
+				for (ItemId constraintItem = 0; constraintItem < MAX_ITEMS; ++constraintItem)
+				{
+				if (node->itemList().numItemsWithId(constraintItem) == 0)
+				{
+				for (unsigned int i = 0; i < numItemsToContribute; ++i)
+				{
+				spawnMCC(node->id(), contributedItem, constraintItem);
+				}
+				}
+				}
+				*/
+			}
+		}
+	}
+}
+
+void ModuleNodeCluster::ClearAgent()
+{
+	for (AgentPtr agent : App->agentContainer->allAgents())
+	{
+		agent->stop();
+	}
 }
 
 bool ModuleNodeCluster::startSystem()
@@ -544,14 +586,14 @@ void ModuleNodeCluster::runSystem()
 				node->itemList().removeItem(mcc->contributedItemId(),mcc->contributed_quantity());
 				node->itemList().addItem(mcc->constraintItemId(),mcc->constrain_quantity());
 				iLog << "MCC exchange at Node " << node->id() << ":"
-					<< " -" << mcc->contributedItemId()
-					<< " +" << mcc->constraintItemId();
+					<< " -" << mcc->contributedItemId() << ":" << mcc->contributed_quantity()
+					<< " +" << mcc->constraintItemId() << ":" << mcc->constrain_quantity();
 			}
 			else
 			{
 				wLog << "MCC exchange at Node " << mcc->id() << " not found:"
-					<< " -" << mcc->contributedItemId()
-					<< " +" << mcc->constraintItemId();
+					<< " -" << mcc->contributedItemId() << ":" << mcc->contributed_quantity()
+					<< " +" << mcc->constraintItemId() << ":" << mcc->constrain_quantity();
 			}
 			mcc->stop();
 		}
@@ -567,14 +609,14 @@ void ModuleNodeCluster::runSystem()
 				node->itemList().addItem(mcp->requestedItemId(),mcp->requested_quantity());
 				node->itemList().removeItem(mcp->contributedItemId(),mcp->contributed_quantity());
 				iLog << "MCP exchange at Node " << node->id() << ":"
-					<< " -" << mcp->contributedItemId()
-					<< " +" << mcp->requestedItemId();
+					<< " -" << mcp->contributedItemId() <<":"<< mcp->contributed_quantity()
+					<< " +" << mcp->requestedItemId() << ":" << mcp->requested_quantity();
 			}
 			else
 			{
 				wLog << "MCP exchange at Node " << node->id() << " not found:"
-					<< " -" << mcp->contributedItemId()
-					<< " +" << mcp->requestedItemId();
+					<< " -" << mcp->contributedItemId() << ":" << mcp->contributed_quantity()
+					<< " +" << mcp->requestedItemId() << ":" << mcp->requested_quantity();
 			}
 			mcp->stop();
 		}
@@ -602,6 +644,57 @@ void ModuleNodeCluster::runSystem()
 
 void ModuleNodeCluster::stopSystem()
 {
+}
+
+void ModuleNodeCluster::CleanNegotiation()
+{
+	current_negotiation.clear();
+}
+
+void ModuleNodeCluster::ShowValueExchange(uint16_t contribution, uint16_t request, uint16_t contribution_quantity, uint16_t request_quantity)
+{
+	std::string contribution_text = "You offert " + std::to_string(contribution_quantity);
+	std::string request_text = "You request " + std::to_string(request_quantity);
+
+	ImGui::Text(contribution_text.c_str());
+	ImGui::SameLine();
+	ShowBox(contribution);
+	ImGui::Text(request_text.c_str());
+	ImGui::SameLine();
+	ShowBox(request);
+
+}
+
+void ModuleNodeCluster::ShowBox(uint16_t rarity_value)
+{
+	switch (static_cast<ItemType>(GetItemType(rarity_value)))
+	{
+	case  ItemType::COMMON:
+		ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.5f, 0.5f, 0.5f, 0.5f));
+		ImGui::PushStyleColor(ImGuiCol_ButtonActive, ImVec4(0.5f, 0.5f, 0.5f, 0.5f));
+		ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4(0.5f, 0.5f, 0.5f, 0.5f));
+		break;
+	case  ItemType::RARE:
+		ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.3f, 0.3f, 1.0f, 0.5f));
+		ImGui::PushStyleColor(ImGuiCol_ButtonActive, ImVec4(0.3f, 0.3f, 1.0f, 0.5f));
+		ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4(0.3f, 0.3f, 1.0f, 0.5f));
+		break;
+	case  ItemType::EPIC:
+		ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.6f, 0.0f, 1.0f, 0.5f));
+		ImGui::PushStyleColor(ImGuiCol_ButtonActive, ImVec4(0.6f, 0.0f, 1.0f, 0.5f));
+		ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4(0.6f, 0.0f, 1.0f, 0.5f));
+		break;
+	case  ItemType::LEGEND:
+		ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.9f, 0.6f, 0.0f, 0.5f));
+		ImGui::PushStyleColor(ImGuiCol_ButtonActive, ImVec4(0.9f, 0.6f, 0.0f, 0.5f));
+		ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4(0.9f, 0.6f, 0.0f, 0.5f));
+		break;
+	default:
+		break;
+	}
+
+	ImGui::Button("",ImVec2(20, 20));
+	ImGui::PopStyleColor(3);
 }
 
 void ModuleNodeCluster::spawnMCP(int nodeId, int requestedItemId, int requested_quantity, int contributedItemId, int contributed_quantity, int actual_amount_contribution)

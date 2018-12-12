@@ -21,7 +21,7 @@ public:
 	UCP* asUCP() override { return this; }
 	void OnPacketReceived(TCPSocketPtr socket, const PacketHeader &packetHeader, InputMemoryStream &stream) override;
 	bool IsFinish();
-	void createChildMCP(uint16_t request, uint16_t requested_quantity);
+	void createChildMCP(uint16_t request, uint16_t requested_quantity, uint16_t contributed_quantity);
 	void createChildMCP(uint16_t request);
 	void EndAgreement();
 	void destroyChildMCP();

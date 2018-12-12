@@ -70,7 +70,9 @@ void UCP::update()
 				packet.dstAgentId = ucc_location.agentId;
 				PacketUCPNegotiateUCCConstrainResult constrain_result;
 				constrain_result.agrement = _mcp->negotiationAgreement();
-				constrain_result.quantity = _mcp->contributed_quantity();
+				constrain_result.constrain_quantity = _requested_quantity;
+				constrain_result.contributed_quantity = _contributed_quantity;
+
 				OutputMemoryStream stream;
 				packet.Write(stream);
 				constrain_result.Write(stream);
@@ -121,7 +123,9 @@ void UCP::OnPacketReceived(TCPSocketPtr socket, const PacketHeader &packetHeader
 				setState(UCP_ST_SENDING_CONSTRAIN);
 
 				constrain_result.agrement = true;
-				constrain_result.quantity = _contributed_quantity;
+				constrain_result.constrain_quantity = _requested_quantity;
+				constrain_result.contributed_quantity =  _contributed_quantity;
+
 				packet.Write(stream);
 				constrain_result.Write(stream);
 
@@ -139,13 +143,14 @@ void UCP::OnPacketReceived(TCPSocketPtr socket, const PacketHeader &packetHeader
 				{
 					setState(UCP_ST_SENDING_CONSTRAIN);
 					constrain_result.agrement = false;
-					constrain_result.quantity = _contributed_quantity;
+
 					packet.Write(stream);
 					constrain_result.Write(stream);
 				}
 				else
 				{
-					createChildMCP(item_request.itemId, petition_quantity);
+
+					createChildMCP(item_request.itemId, petition_quantity, contribution_quantity);
 
 				}
 			}		
@@ -154,7 +159,6 @@ void UCP::OnPacketReceived(TCPSocketPtr socket, const PacketHeader &packetHeader
 				setState(UCP_ST_SENDING_CONSTRAIN);
 
 				constrain_result.agrement = false;
-				constrain_result.quantity = _contributed_quantity;
 
 				packet.Write(stream);
 				constrain_result.Write(stream);
@@ -196,11 +200,12 @@ bool UCP::IsFinish()
 	return state()==UCP_ST_FINISHED;
 }
 
-void UCP::createChildMCP(uint16_t request, uint16_t requested_quantity)
+void UCP::createChildMCP(uint16_t request, uint16_t requested_quantity, uint16_t contributed_quantity)
 {
 	destroyChildMCP();
 	_mcp.reset();
-	_mcp = App->agentContainer->createMCP(node(), request, requested_quantity, _contributedItemId,_contributed_quantity, _actual_contributed_quantity, searchDepth + 1);
+
+	_mcp = App->agentContainer->createMCP(node(), request, requested_quantity, _contributedItemId, contributed_quantity, _actual_contributed_quantity, searchDepth + 1);
 
 }
 

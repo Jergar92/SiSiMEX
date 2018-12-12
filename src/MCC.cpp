@@ -2,6 +2,7 @@
 #include "UCC.h"
 #include "Application.h"
 #include "ModuleAgentContainer.h"
+#include "ModuleNodeCluster.h"
 
 
 enum State
@@ -66,13 +67,16 @@ void MCC::update()
 		{
 			if (_ucc->final_agrement)
 			{
+				_contributed_quantity = _ucc->_contributed_quantity;
 				_constrain_quantity = _ucc->_constraint_quantity;
 				final_agreement = true;
 				setState(ST_NEGOTIATION_FINISH);
 			}
-			else			
+			else
+			{
+				App->modNodeCluster->RemoveNegotiation(node()->id(), _constrain_quantity);
 				setState(ST_IDLE);
-
+			}
 			
 
 			destroyChildUCC();
@@ -119,11 +123,14 @@ void MCC::OnPacketReceived(TCPSocketPtr socket, const PacketHeader &packetHeader
 	case PacketType::MCPNegotiateMCCRequest:
 		PacketMCPNegotiateMCCRequest pkt_request;
 		pkt_request.Read(stream);
-		if (isIdling()&& pkt_request.quantity_request <= _total_contributed_quantity)
+		if (isIdling()&& validMCC(pkt_request.quantity_request))
 		{
-			_contributed_quantity = pkt_request.quantity_request;
+
 			final_agreement = false;
 			setState(ST_NEGOTIATING);
+
+			App->modNodeCluster->AddNegotation(node()->id(), _contributedItemId);
+
 			createChildUCC();	
 			
 			PacketHeader pkt_header;
@@ -231,6 +238,17 @@ void MCC::unregisterFromYellowPages()
 	packetData.Write(stream);
 
 	sendPacketToYellowPages(stream);
+}
+
+bool MCC::validMCC(uint16_t quantity_request)
+{
+
+	if (App->modNodeCluster->validMCC(node()->id(), _contributedItemId))
+	{
+
+		return quantity_request <= _total_contributed_quantity;
+	}
+	return false;
 }
 
 void MCC::createChildUCC()

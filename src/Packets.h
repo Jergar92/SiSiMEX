@@ -156,16 +156,19 @@ using PacketUCCNegotiateUCPConstrainRequest = PacketRegisterMCC;
 class PacketUCPNegotiateUCCConstrainResult {
 public:
 	bool agrement; // Which item has to be registered?
-	uint16_t quantity; // Which item has to be registered?
+	uint16_t constrain_quantity; // Which item has to be registered?
+	uint16_t contributed_quantity; // Which item has to be registered?
 
 	void Read(InputMemoryStream &stream) {
 		stream.Read(agrement);
-		stream.Read(quantity);
+		stream.Read(constrain_quantity);
+		stream.Read(contributed_quantity);
 
 	}
 	void Write(OutputMemoryStream &stream) {
 		stream.Write(agrement);
-		stream.Write(quantity);
+		stream.Write(constrain_quantity);
+		stream.Write(contributed_quantity);
 
 	}
 };

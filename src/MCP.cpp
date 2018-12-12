@@ -2,8 +2,6 @@
 #include "UCP.h"
 #include "Application.h"
 #include "ModuleAgentContainer.h"
-
-
 enum State
 {
 	ST_INIT,
@@ -45,6 +43,7 @@ MCP::~MCP()
 
 void MCP::update()
 {
+
 	switch (state())
 	{
 	case ST_INIT:
@@ -57,26 +56,29 @@ void MCP::update()
 		if (_mccRegisters.empty() || _mccRegisters.size() <= _mccRegisterIndex)
 		{
 			setState(ST_NEGOTIATION_FINISHED);
-			wLog << "_searchDepth =" << _searchDepth;
 			destroyChildUCP();
 			break;
 		}
-		OutputMemoryStream packet;
-		PacketHeader pkt_header;
-		PacketMCPNegotiateMCCRequest pkt_request;
-		pkt_request.quantity_request = _requested_quantity;
-		AgentLocation agent = _mccRegisters[_mccRegisterIndex++];
-		pkt_header.packetType = PacketType::MCPNegotiateMCCRequest;
-		pkt_header.srcAgentId = id();
-		pkt_header.dstAgentId = agent.agentId;
+		
+		int mmcRegister = _mccRegisterIndex++;
+	
+			OutputMemoryStream packet;
+			PacketHeader pkt_header;
+			PacketMCPNegotiateMCCRequest pkt_request;
+			pkt_request.quantity_request = _requested_quantity;
+			AgentLocation agent = _mccRegisters[mmcRegister];
+			pkt_header.packetType = PacketType::MCPNegotiateMCCRequest;
+			pkt_header.srcAgentId = id();
+			pkt_header.dstAgentId = agent.agentId;
 
 
-		pkt_header.Write(packet);
-		pkt_request.Write(packet);
+			pkt_header.Write(packet);
+			pkt_request.Write(packet);
 
-		sendPacketToAgent(agent.hostIP, agent.hostPort, packet);
-		setState(ST_WAITING_ACCEPTANCE);
-
+			sendPacketToAgent(agent.hostIP, agent.hostPort, packet);
+			setState(ST_WAITING_ACCEPTANCE);
+		
+		
 	}
 			// TODO: Handle this state
 		break;
@@ -160,7 +162,8 @@ void MCP::OnPacketReceived(TCPSocketPtr socket, const PacketHeader &packetHeader
 			pkt_answer.Read(stream);
 			if (pkt_answer.accepted)
 			{
-				setState(ST_NEGOTIATING);				
+
+				setState(ST_NEGOTIATING);	
 				createChildUCP(pkt_answer.ucc_location);
 			}
 			else
@@ -209,6 +212,8 @@ bool MCP::queryMCCsForItem(int itemId)
 	// 1) Ask YP for MCC hosting the item 'itemId'
 	return sendPacketToYellowPages(stream);
 }
+
+
 
 void MCP::createChildUCP(const AgentLocation &ucc_location)
 {
