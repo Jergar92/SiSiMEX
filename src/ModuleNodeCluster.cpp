@@ -290,7 +290,7 @@ bool ModuleNodeCluster::updateGUI()
 		}
 
 		// Context menu to spawn agents
-		ImGui::SetNextWindowSize(ImVec2(450, 150));
+		ImGui::SetNextWindowSize(ImVec2(450, 200));
 		if (ImGui::BeginPopup("ItemOps"))
 		{
 			int numberOfItems = _nodes[selectedNode]->itemList().numItemsWithId(selectedItem);
@@ -333,8 +333,17 @@ bool ModuleNodeCluster::updateGUI()
 					ShowDealProposition(requestedItem, itemIds[comboItem], petition_quantity, contribution_quantity);
 					int actual_amount_contribution = _nodes[selectedNode]->itemList().numItemsWithId(itemIds[comboItem]);
 					ShowValueExchange(itemIds[comboItem], requestedItem, contribution_quantity, petition_quantity);
-					
-					if (ImGui::Button("Spawn MCP") && ValidateSpawn(actual_amount_contribution, contribution_quantity)) {
+					bool validate = ValidateSpawn(actual_amount_contribution, contribution_quantity);
+					if (validate)
+					{
+						ImGui::TextColored(ImVec4(0.0f, 1.0f, 0.0f, 1.0f), "You can do this exchange");
+					}
+					else
+					{
+						ImGui::TextColored(ImVec4(1.0f, 0.0f, 0.0f, 1.0f), "You can't do this exchange");
+
+					}
+					if (ImGui::Button("Spawn MCP") && validate) {
 						ClearAgent();
 						SpawnAgentMCC();
 						int contributedItem = itemIds[comboItem];
@@ -343,6 +352,7 @@ bool ModuleNodeCluster::updateGUI()
 						//spawnMCP(selectedNode, requestedItem, contributedItem);
 						ImGui::CloseCurrentPopup();
 					}
+					
 				}
 				else
 				{
